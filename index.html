@@ -3,80 +3,958 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mobil Uygulama Geliştirici</title>
-    <style>
-        /* Sayfa Tasarımı (CSS) */
-        body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f0f2f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            color: #333;
-        }
-        .container {
-            background-color: #ffffff;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            text-align: center;
-            max-width: 500px;
-            width: 90%;
-        }
-        h1 {
-            color: #2c3e50;
-            margin-bottom: 10px;
-        }
-        h3 {
-            color: #3498db;
-            font-weight: normal;
-            margin-top: 0;
-        }
-        p {
-            line-height: 1.6;
-            color: #555;
-            margin-bottom: 30px;
-        }
-        .icon-android {
-            font-size: 50px;
-            color: #3ddc84; /* Android Yeşili */
-            margin-bottom: 20px;
-        }
-        /* İsterseniz Play Store linki butonu */
-        .btn {
-            display: inline-block;
-            padding: 12px 24px;
-            background-color: #3498db;
-            color: white;
-            text-decoration: none;
-            border-radius: 30px;
-            font-weight: bold;
-            transition: background-color 0.3s ease;
-        }
-        .btn:hover {
-            background-color: #2980b9;
-        }
-    </style>
+    <title>MarinEkipman - Profesyonel Denizcilik Çözümleri</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: {
+                            800: '#0a192f',
+                            900: '#020c1b',
+                        },
+                        gold: {
+                            400: '#ffd700',
+                            500: '#c5a000',
+                        },
+                        sea: {
+                            100: '#e0f7fa',
+                            500: '#006994',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Montserrat', 'sans-serif'],
+                    },
+                    animation: {
+                        'scroll-left': 'scrollLeft 40s linear infinite',
+                    },
+                    keyframes: {
+                        scrollLeft: {
+                            '0%': { transform: 'translateX(0)' },
+                            '100%': { transform: 'translateX(-50%)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Montserrat', sans-serif; }
+        .slider-image { transition: opacity 1s ease-in-out; }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #0a192f; border-radius: 4px; }
+        
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #006994;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .filter-checkbox:checked + div {
+            background-color: #006994;
+            border-color: #006994;
+        }
+        .filter-checkbox:checked + div svg { display: block; }
+        
+        /* Brand Logo Filter Grayscale */
+        .brand-logo-filter { filter: grayscale(100%); opacity: 0.7; transition: all 0.3s; }
+        .brand-logo-filter:hover { filter: grayscale(0%); opacity: 1; transform: scale(1.05); }
+    </style>
 </head>
-<body>
+<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
 
-    <div class="container">
-        <i class="fa-brands fa-android icon-android"></i>
-        
-        <h1>Merhaba, Ben Geliştirici Emre!</h1>
-        
-        <h3>Android Uygulama Geliştiricisi</h3>
-        
-        <p>
-            Kullanıcı odaklı, performanslı ve modern mobil uygulamalar geliştiriyorum. 
-            Teknolojiye olan tutkumu kodlara yansıtarak insanların hayatını kolaylaştıran çözümler üretiyorum.
-            Uygulamalarıma Google Play Store üzerinden ulaşabilirsiniz.
-        </p>
-
+    <!-- Top Bar -->
+    <div class="bg-navy-800 text-gray-300 text-xs py-2 border-b border-gray-700">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+            <div class="hidden md:flex space-x-4">
+                <span><i class="fa-solid fa-phone mr-1"></i> +90 212 555 0000</span>
+                <span><i class="fa-solid fa-envelope mr-1"></i> info@marinekipman.com</span>
+            </div>
+            <div class="flex items-center space-x-4 ml-auto">
+                <span class="mr-2">Görüntüleme Kuru:</span>
+                <select id="currency-selector" onchange="app.changeDisplayCurrency(this.value)" class="bg-navy-900 text-white border border-gray-600 rounded px-2 py-1 focus:outline-none text-xs">
+                    <option value="TRY">TRY (₺)</option>
+                    <option value="USD">USD ($)</option>
+                    <option value="EUR">EUR (€)</option>
+                </select>
+            </div>
         </div>
+    </div>
 
+    <!-- Navigation -->
+    <nav class="bg-navy-900 text-white sticky top-0 z-50 shadow-lg">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <a href="#" onclick="app.navigate('home')" class="text-2xl font-bold tracking-wider flex items-center gap-2">
+                <i class="fa-solid fa-anchor text-gold-400"></i> MARIN<span class="text-sea-500">EKIPMAN</span>
+            </a>
+            
+            <div class="hidden md:flex space-x-8">
+                <a href="#" onclick="app.navigate('home')" class="hover:text-gold-400 transition font-medium">Ana Sayfa</a>
+                <a href="#" onclick="app.navigate('shop')" class="hover:text-gold-400 transition font-medium">Mağaza</a>
+                <a href="#" onclick="app.navigate('about')" class="hover:text-gold-400 transition font-medium">Kurumsal</a>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <button onclick="app.toggleCart()" class="relative hover:text-gold-400 transition group">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-shopping-cart text-xl"></i>
+                        <span class="text-sm font-semibold hidden md:block">Sepetim</span>
+                    </div>
+                    <span id="cart-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">0</span>
+                </button>
+                <button onclick="app.toggleAdminLogin()" class="hover:text-gold-400 transition" title="Yönetici Paneli">
+                    <i class="fa-solid fa-user-shield text-xl"></i>
+                </button>
+            </div>
+        </div>
+        <div class="md:hidden flex justify-center py-2 bg-navy-800 space-x-4 text-sm border-t border-gray-700">
+            <a href="#" onclick="app.navigate('home')">Ana Sayfa</a>
+            <a href="#" onclick="app.navigate('shop')">Mağaza</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main id="main-content" class="flex-grow">
+        <!-- JS Injected -->
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-navy-900 text-gray-400 py-12 mt-auto border-t-4 border-gold-500">
+        <div class="container mx-auto px-4 text-center md:text-left">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div class="md:col-span-1">
+                    <h3 class="text-white font-bold text-xl mb-4 flex items-center justify-center md:justify-start gap-2">
+                        <i class="fa-solid fa-anchor text-gold-400"></i> MARIN<span class="text-sea-500">EKIPMAN</span>
+                    </h3>
+                    <p class="text-sm leading-relaxed">Profesyonel denizcilik malzemeleri tedarikçiniz.</p>
+                </div>
+                <div>
+                    <h3 class="text-white font-bold text-lg mb-4">Hızlı Erişim</h3>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#" onclick="app.navigate('shop')" class="hover:text-gold-400">Tüm Ürünler</a></li>
+                        <li><a href="#" onclick="app.navigate('about')" class="hover:text-gold-400">Hakkımızda</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-white font-bold text-lg mb-4">Bülten</h3>
+                    <p class="text-xs mb-2">Kampanyalardan haberdar olun.</p>
+                    <div class="flex">
+                        <input type="email" placeholder="E-posta adresiniz" class="bg-navy-800 border border-navy-700 text-white px-3 py-1 text-sm rounded-l w-full outline-none">
+                        <button class="bg-gold-500 text-navy-900 px-3 py-1 text-sm font-bold rounded-r hover:bg-gold-400">Kayıt</button>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-white font-bold text-lg mb-4">İletişim</h3>
+                    <p class="text-sm">info@marinekipman.com</p>
+                    <div class="flex space-x-3 mt-4 justify-center md:justify-start">
+                        <i class="fa-brands fa-instagram hover:text-white cursor-pointer"></i>
+                        <i class="fa-brands fa-facebook hover:text-white cursor-pointer"></i>
+                        <i class="fa-brands fa-linkedin hover:text-white cursor-pointer"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center mt-12 pt-6 border-t border-gray-800 text-xs">
+                &copy; 2024 MarinEkipman.com | Design by AI
+            </div>
+        </div>
+    </footer>
+
+    <!-- Cart Modal -->
+    <div id="cart-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex justify-end">
+        <div class="bg-white w-full md:w-[450px] h-full shadow-2xl flex flex-col transform transition-transform duration-300 translate-x-full" id="cart-panel">
+            <div class="p-5 bg-navy-900 text-white flex justify-between items-center shadow-md">
+                <h2 class="text-lg font-bold"><i class="fa-solid fa-shopping-basket mr-2 text-gold-400"></i>Sepetim</h2>
+                <button onclick="app.toggleCart()" class="text-gray-300 hover:text-white"><i class="fa-solid fa-times text-xl"></i></button>
+            </div>
+            <div id="cart-items" class="flex-grow overflow-y-auto p-5 space-y-4 bg-gray-50"></div>
+            <div class="p-6 border-t border-gray-200 bg-white">
+                <div class="flex justify-between items-end mb-6">
+                    <span class="text-lg font-bold text-navy-900">Toplam:</span>
+                    <span id="cart-total" class="text-2xl font-bold text-sea-500">0.00</span>
+                </div>
+                <button onclick="app.checkout()" class="w-full bg-navy-900 hover:bg-sea-500 text-white font-bold py-4 rounded-lg transition duration-300">
+                    Siparişi Tamamla
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Login Modal -->
+    <div id="admin-modal" class="fixed inset-0 bg-black bg-opacity-70 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-8 relative">
+            <button onclick="app.toggleAdminLogin()" class="absolute top-4 right-4 text-gray-400 hover:text-red-500"><i class="fa-solid fa-times text-xl"></i></button>
+            <h2 class="text-2xl font-bold text-navy-900 text-center mb-6">Yönetici Girişi</h2>
+            <form onsubmit="app.handleAdminLogin(event)" class="space-y-4">
+                <input type="password" id="admin-password" class="w-full border p-3 rounded-lg focus:border-sea-500 outline-none" placeholder="Şifre (Demo: admin)">
+                <button type="submit" class="w-full bg-navy-900 text-white font-bold py-3 rounded-lg hover:bg-navy-800">Giriş Yap</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-navy-900 text-white px-6 py-4 rounded-lg shadow-xl transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-3">
+        <i class="fa-solid fa-check-circle text-green-400 text-xl"></i>
+        <span id="toast-message">İşlem başarılı!</span>
+    </div>
+
+    <!-- JAVASCRIPT -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, doc, deleteDoc, updateDoc, onSnapshot, setDoc, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = JSON.parse(new URLSearchParams(window.location.search).get('firebase_config') || '{}') || window.__firebase_config;
+        let db, auth, appId, userId;
+
+        // --- GLOBAL STATE ---
+        const state = {
+            products: [],
+            cart: [],
+            isAdmin: false,
+            adminTab: 'products', // products, settings, campaign, ads
+            settings: {
+                // Categories now objects: { name, image, featured }
+                categories: [
+                    { name: 'Elektronik', image: 'https://images.unsplash.com/photo-1559348349-86f1f65817fe?w=600', featured: true },
+                    { name: 'Güvenlik', image: 'https://images.unsplash.com/photo-1621849400072-f554417f7051?w=600', featured: true },
+                    { name: 'Motor', image: 'https://images.unsplash.com/photo-1563816654030-84c2a5144934?w=600', featured: true }
+                ],
+                // Brands now objects: { name, logo, categories: [] }
+                brands: [
+                    { name: 'Garmin', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Garmin_Logo.svg/2560px-Garmin_Logo.svg.png', categories: ['Elektronik'] },
+                    { name: 'Raymarine', logo: 'https://1000logos.net/wp-content/uploads/2023/12/Raymarine-Logo.png', categories: ['Elektronik'] },
+                    { name: 'Volvo Penta', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Volvo_Penta_Logo.svg/1200px-Volvo_Penta_Logo.svg.png', categories: ['Motor'] },
+                    { name: 'Lalizas', logo: 'https://www.lalizas.com/images/lalizas_logo.png', categories: ['Güvenlik'] }
+                ],
+                sliders: [
+                    { title: "ROTA GÜVENLİK OLSUN", subtitle: "En iyi ekipmanlar.", image: "https://images.unsplash.com/photo-1566418342468-b39ee9d0c647?auto=format&fit=crop&q=80&w=1200" },
+                    { title: "PROFESYONEL ÇÖZÜMLER", subtitle: "Dünya markaları.", image: "https://images.unsplash.com/photo-1621849400072-f554417f7051?auto=format&fit=crop&q=80&w=1200" }
+                ],
+                adBanner: {
+                    active: true,
+                    image: "https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=2094&auto=format&fit=crop",
+                    link: "#",
+                    title: "Büyük Yaz Fırsatları"
+                }
+            },
+            filters: { category: 'Tümü', brands: [], search: '' },
+            displayCurrency: 'TRY',
+            rates: { TRY: 1, USD: 0.029, EUR: 0.027 },
+            sliderIndex: 0
+        };
+
+        class App {
+            constructor() {
+                this.initFirebase();
+                this.bindEvents();
+                this.fetchRates();
+            }
+
+            async initFirebase() {
+                try {
+                    const app = initializeApp(firebaseConfig || JSON.parse(__firebase_config));
+                    auth = getAuth(app);
+                    db = getFirestore(app);
+                    appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app';
+                    await signInAnonymously(auth);
+                    onAuthStateChanged(auth, (user) => {
+                        if (user) {
+                            userId = user.uid;
+                            this.fetchData();
+                            this.render();
+                            this.startSlider();
+                        }
+                    });
+                } catch (e) {
+                    this.mockData();
+                    this.render();
+                    this.startSlider();
+                }
+            }
+
+            mockData() {
+                state.products = [
+                    { id: '1', name: 'Garmin GPSMAP 1223', price: 2500, currency: 'USD', discountPrice: 2200, category: 'Elektronik', brand: 'Garmin', image: 'https://images.unsplash.com/photo-1581092583537-20d51b4b4f1b?w=400', stock: 5 },
+                    { id: '2', name: 'Can Yeleği 150N', price: 2000, currency: 'TRY', discountPrice: null, category: 'Güvenlik', brand: 'Lalizas', image: 'https://images.unsplash.com/photo-1544724569-5f546fd6dd2d?w=400', stock: 20 },
+                    { id: '3', name: 'Yanmar Filtre', price: 150, currency: 'EUR', discountPrice: null, category: 'Motor', brand: 'Volvo Penta', image: 'https://images.unsplash.com/photo-1563816654030-84c2a5144934?w=400', stock: 0 }
+                ];
+            }
+
+            fetchRates() {
+                setTimeout(() => {
+                    state.rates = { TRY: 1, USD: 0.029, EUR: 0.027 }; 
+                    if(document.getElementById('product-grid')) this.renderProducts();
+                }, 1000);
+            }
+
+            fetchData() {
+                if(!db) return;
+                onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'products'), (snap) => {
+                    state.products = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                    this.refreshUI();
+                });
+                onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'settings'), (snap) => {
+                    if(snap.exists()) {
+                        state.settings = { ...state.settings, ...snap.data() };
+                        this.refreshUI();
+                    } else {
+                        this.saveSettings();
+                    }
+                });
+            }
+
+            async saveSettings() {
+                if(!db) return;
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings'), state.settings);
+            }
+
+            async saveProduct(p) {
+                if(!db) return;
+                if(p.id) { const {id,...d} = p; await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', id), d); }
+                else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'products'), p);
+                this.showToast("Ürün kaydedildi.");
+            }
+
+            async deleteProduct(id) {
+                if(!db || !confirm("Silinecek?")) return;
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', id));
+                this.showToast("Ürün silindi.");
+            }
+
+            // --- BULK OPERATIONS (Campaign) ---
+            async applyBulkDiscount(type, target, percent) {
+                if (!db || !confirm(`${target} için %${percent} işlem yapılacak. Emin misiniz?`)) return;
+
+                const batch = writeBatch(db);
+                let count = 0;
+
+                state.products.forEach(p => {
+                    let shouldUpdate = false;
+                    if (type === 'category' && p.category === target) shouldUpdate = true;
+                    if (type === 'brand' && p.brand === target) shouldUpdate = true;
+
+                    if (shouldUpdate) {
+                        const ref = doc(db, 'artifacts', appId, 'public', 'data', 'products', p.id);
+                        let newPrice = p.price;
+                        // If positive, discount. If negative (e.g. -10), price increase
+                        if (percent > 0) {
+                           const discountAmount = p.price * (percent / 100);
+                           batch.update(ref, { discountPrice: p.price - discountAmount });
+                        } else {
+                           // Remove discount or increase base price? Let's assume remove discount if 0
+                           if (percent === 0) batch.update(ref, { discountPrice: null });
+                        }
+                        count++;
+                    }
+                });
+
+                if (count > 0) {
+                    await batch.commit();
+                    this.showToast(`${count} ürün güncellendi.`);
+                } else {
+                    this.showToast("Eşleşen ürün bulunamadı.");
+                }
+            }
+
+            // --- LOGIC ---
+            convertPrice(amount, fromCurrency) {
+                if(!amount) return 0;
+                let inTRY = fromCurrency === 'TRY' ? amount : amount / state.rates[fromCurrency];
+                return inTRY * state.rates[state.displayCurrency];
+            }
+
+            formatPrice(amount, fromCurrency) {
+                return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: state.displayCurrency }).format(this.convertPrice(amount, fromCurrency));
+            }
+
+            // --- NAVIGATION & RENDERING ---
+            render() { this.navigate('home'); }
+
+            navigate(page) {
+                const main = document.getElementById('main-content');
+                window.scrollTo(0,0);
+                if (page === 'home') {
+                    main.innerHTML = this.getHomeHTML();
+                    this.startSliderEffect();
+                } else if (page === 'shop') {
+                    main.innerHTML = this.getShopHTML();
+                    this.renderFilterSidebar();
+                    this.renderProducts();
+                } else if (page === 'admin' && state.isAdmin) {
+                    main.innerHTML = this.getAdminHTML();
+                    this.renderAdminTab();
+                } else if (page === 'about') {
+                    main.innerHTML = this.getAboutHTML();
+                }
+            }
+
+            refreshUI() {
+                if(document.getElementById('product-grid')) this.renderProducts();
+                if(document.getElementById('brand-scroll')) document.getElementById('brand-wrapper').innerHTML = this.getMarqueeHTML();
+                if(document.getElementById('featured-cats')) document.getElementById('featured-cats').innerHTML = this.getFeaturedCatsHTML();
+                if(document.getElementById('admin-content')) this.renderAdminTab();
+                this.updateCartUI();
+            }
+
+            // --- HTML GENERATORS ---
+            getHomeHTML() {
+                return `
+                    <div class="relative h-[500px] md:h-[600px] overflow-hidden bg-navy-900 text-white">
+                        <div id="slider-container" class="absolute inset-0"></div>
+                        <div class="absolute inset-0 bg-gradient-to-r from-navy-900/90 to-transparent flex items-center">
+                            <div class="container mx-auto px-4 max-w-2xl animate-fade-in" id="slider-text"></div>
+                        </div>
+                    </div>
+
+                    <!-- Marquee Brands -->
+                    <div id="brand-wrapper" class="bg-white border-b border-gray-200 py-6 overflow-hidden">
+                        ${this.getMarqueeHTML()}
+                    </div>
+
+                    <!-- Ad Banner Section -->
+                    ${state.settings.adBanner.active ? `
+                    <div class="container mx-auto px-4 py-8">
+                        <a href="${state.settings.adBanner.link}" class="block relative rounded-xl overflow-hidden shadow-2xl group h-48 md:h-64">
+                            <img src="${state.settings.adBanner.image}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700">
+                            <div class="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition flex items-center justify-center">
+                                <h2 class="text-3xl md:text-5xl text-white font-bold border-4 border-white p-4 uppercase tracking-widest bg-white/10 backdrop-blur-sm">${state.settings.adBanner.title}</h2>
+                            </div>
+                        </a>
+                    </div>
+                    ` : ''}
+
+                    <!-- Featured Categories -->
+                    <div class="container mx-auto px-4 py-16">
+                        <h2 class="text-3xl font-bold text-navy-900 mb-2 text-center">Öne Çıkan Kategoriler</h2>
+                        <div class="w-20 h-1 bg-gold-500 mx-auto mb-10"></div>
+                        <div id="featured-cats" class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            ${this.getFeaturedCatsHTML()}
+                        </div>
+                    </div>
+                `;
+            }
+
+            getMarqueeHTML() {
+                const brands = state.settings.brands;
+                const items = brands.map(b => `
+                    <div class="mx-8 min-w-[120px] h-[60px] flex items-center justify-center cursor-pointer" onclick="app.filterByBrand('${b.name}')">
+                        ${b.logo ? `<img src="${b.logo}" class="max-h-full max-w-full object-contain brand-logo-filter" title="${b.name}">` : `<span class="font-bold text-navy-800 border px-2 py-1">${b.name}</span>`}
+                    </div>
+                `).join('');
+                return `
+                    <div class="relative flex overflow-x-hidden group" id="brand-scroll">
+                        <div class="py-2 animate-scroll-left flex items-center whitespace-nowrap group-hover:paused">
+                            ${items} ${items} ${items} ${items}
+                        </div>
+                    </div>
+                `;
+            }
+
+            getFeaturedCatsHTML() {
+                return state.settings.categories.filter(c => c.featured).map(c => `
+                    <div class="group relative overflow-hidden rounded-xl shadow-lg cursor-pointer h-80" onclick="app.setCategoryFilter('${c.name}')">
+                        <img src="${c.image || 'https://placehold.co/600x800'}" class="w-full h-full object-cover transform group-hover:scale-110 transition duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-navy-900 via-transparent to-transparent opacity-90"></div>
+                        <div class="absolute bottom-0 left-0 p-8">
+                            <h3 class="text-2xl font-bold text-white mb-2 uppercase tracking-wide">${c.name}</h3>
+                            <p class="text-gold-400 text-sm font-semibold group-hover:translate-x-2 transition">KEŞFET <i class="fa-solid fa-arrow-right ml-1"></i></p>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            getShopHTML() {
+                return `
+                    <div class="container mx-auto px-4 py-8">
+                        <div class="flex flex-col md:flex-row gap-8">
+                            <aside class="w-full md:w-1/4 flex-shrink-0">
+                                <div class="bg-white rounded-lg shadow-md p-6 sticky top-24 border border-gray-100">
+                                    <div class="flex justify-between items-center mb-6">
+                                        <h2 class="text-xl font-bold text-navy-900">Filtreler</h2>
+                                        <button onclick="app.resetFilters()" class="text-xs text-red-500 hover:underline">Temizle</button>
+                                    </div>
+                                    <input type="text" placeholder="Ürün Ara..." oninput="app.setSearchFilter(this.value)" class="w-full border p-2 rounded text-sm mb-6 focus:border-sea-500 outline-none bg-gray-50">
+                                    <div id="filter-sidebar-content"></div>
+                                </div>
+                            </aside>
+                            <div class="w-full md:w-3/4">
+                                <div class="flex justify-between items-center mb-6 bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+                                    <div>
+                                        <h1 class="text-2xl font-bold text-navy-900" id="cat-title">Tüm Ürünler</h1>
+                                        <div class="h-1 w-10 bg-gold-500 mt-1"></div>
+                                    </div>
+                                    <span class="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full" id="prod-count">0</span>
+                                </div>
+                                <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            getAdminHTML() {
+                const tabs = [
+                    { id: 'products', label: 'Ürün Yönetimi', icon: 'fa-box' },
+                    { id: 'settings', label: 'Yapılandırma', icon: 'fa-sliders' },
+                    { id: 'campaign', label: 'Kampanya & İskonto', icon: 'fa-tags' },
+                    { id: 'ads', label: 'Reklam & Slider', icon: 'fa-bullhorn' }
+                ];
+                return `
+                    <div class="container mx-auto px-4 py-8">
+                        <div class="flex justify-between items-center mb-6 bg-white p-4 rounded shadow-sm border-l-4 border-navy-900">
+                            <h1 class="text-2xl font-bold text-navy-900">Yönetici Paneli</h1>
+                            <button onclick="app.logoutAdmin()" class="text-red-600 font-bold text-sm bg-red-50 px-3 py-1 rounded hover:bg-red-100">Çıkış</button>
+                        </div>
+                        <div class="flex overflow-x-auto gap-2 mb-6 border-b border-gray-200 pb-1">
+                            ${tabs.map(t => `
+                                <button onclick="app.setAdminTab('${t.id}')" class="px-4 py-2 font-bold whitespace-nowrap flex items-center gap-2 transition ${state.adminTab === t.id ? 'text-sea-500 border-b-2 border-sea-500 bg-sea-50 rounded-t' : 'text-gray-500 hover:text-navy-900'}">
+                                    <i class="fa-solid ${t.icon}"></i> ${t.label}
+                                </button>
+                            `).join('')}
+                        </div>
+                        <div id="admin-content" class="bg-white rounded shadow-md p-6 min-h-[500px]"></div>
+                    </div>
+                `;
+            }
+
+            // --- ADMIN TABS CONTENT ---
+            renderAdminTab() {
+                const container = document.getElementById('admin-content');
+                if(!container) return;
+                
+                if(state.adminTab === 'products') this.renderAdminProducts(container);
+                else if(state.adminTab === 'settings') this.renderAdminSettings(container);
+                else if(state.adminTab === 'campaign') this.renderAdminCampaign(container);
+                else if(state.adminTab === 'ads') this.renderAdminAds(container);
+            }
+
+            renderAdminProducts(c) {
+                const cats = state.settings.categories.map(x=>x.name);
+                const brands = state.settings.brands.map(x=>x.name);
+                c.innerHTML = `
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div class="lg:col-span-1">
+                            <div class="bg-gray-50 p-4 rounded border border-gray-200 sticky top-4">
+                                <h3 class="font-bold mb-4 text-navy-900 border-b pb-2">Ürün Ekle / Düzenle</h3>
+                                <form onsubmit="app.handleSaveProduct(event)" class="space-y-3">
+                                    <input type="hidden" name="id">
+                                    <input type="text" name="name" placeholder="Ürün Adı" required class="w-full border p-2 rounded text-sm">
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <input type="text" name="partNo" placeholder="Parça No" class="border p-2 rounded text-sm">
+                                        <input type="number" name="stock" placeholder="Stok Adedi" required class="border p-2 rounded text-sm">
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <select name="category" required class="border p-2 rounded text-sm">${cats.map(c=>`<option value="${c}">${c}</option>`)}</select>
+                                        <select name="brand" required class="border p-2 rounded text-sm">${brands.map(b=>`<option value="${b}">${b}</option>`)}</select>
+                                    </div>
+                                    <div class="grid grid-cols-3 gap-2">
+                                        <input type="number" step="0.01" name="price" placeholder="Fiyat" required class="border p-2 rounded text-sm col-span-2">
+                                        <select name="currency" class="border p-2 rounded text-sm">
+                                            <option value="TRY">TRY</option><option value="USD">USD</option><option value="EUR">EUR</option>
+                                        </select>
+                                    </div>
+                                    <input type="url" name="image" placeholder="Resim URL" class="w-full border p-2 rounded text-sm">
+                                    <button type="submit" class="w-full bg-navy-900 text-white py-2 rounded font-bold hover:bg-sea-500 transition">Kaydet</button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="lg:col-span-2 overflow-x-auto">
+                            <table class="min-w-full text-sm text-left">
+                                <thead class="bg-navy-900 text-white"><tr><th class="p-2">Ad</th><th class="p-2">Stok</th><th class="p-2">Fiyat</th><th class="p-2">Sil</th></tr></thead>
+                                <tbody>
+                                    ${state.products.map(p => `
+                                        <tr class="border-b hover:bg-gray-50">
+                                            <td class="p-2 font-medium">${p.name} <br><span class="text-xs text-gray-500">${p.partNo||'-'}</span></td>
+                                            <td class="p-2">${p.stock > 0 ? `<span class="text-green-600 font-bold">${p.stock}</span>` : `<span class="text-red-600 font-bold">Yok</span>`}</td>
+                                            <td class="p-2">${p.price} ${p.currency}</td>
+                                            <td class="p-2"><button onclick="app.deleteProduct('${p.id}')" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button></td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+
+            renderAdminSettings(c) {
+                c.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <h3 class="font-bold mb-4 text-lg border-b pb-2">Kategoriler (Vitrin)</h3>
+                            <div class="bg-gray-50 p-4 rounded mb-4">
+                                <input type="text" id="new-cat-name" placeholder="Kategori Adı" class="border p-2 w-full mb-2 rounded">
+                                <input type="url" id="new-cat-img" placeholder="Resim URL" class="border p-2 w-full mb-2 rounded">
+                                <label class="flex items-center gap-2 text-sm mb-2"><input type="checkbox" id="new-cat-featured"> Ana Sayfada Göster (Öne Çıkan)</label>
+                                <button onclick="app.addCategory()" class="bg-sea-500 text-white px-4 py-2 rounded w-full">Ekle</button>
+                            </div>
+                            <ul class="space-y-2 max-h-96 overflow-y-auto">
+                                ${state.settings.categories.map(c => `
+                                    <li class="flex justify-between items-center bg-white border p-2 rounded shadow-sm">
+                                        <div class="flex items-center gap-2">
+                                            <img src="${c.image}" class="w-8 h-8 rounded object-cover">
+                                            <span>${c.name} ${c.featured ? '<i class="fa-solid fa-star text-gold-500 text-xs"></i>' : ''}</span>
+                                        </div>
+                                        <button onclick="app.removeCategory('${c.name}')" class="text-red-500"><i class="fa-solid fa-times"></i></button>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                        <div>
+                            <h3 class="font-bold mb-4 text-lg border-b pb-2">Markalar & Eşleştirme</h3>
+                            <div class="bg-gray-50 p-4 rounded mb-4">
+                                <input type="text" id="new-brand-name" placeholder="Marka Adı" class="border p-2 w-full mb-2 rounded">
+                                <input type="url" id="new-brand-logo" placeholder="Logo URL (Opsiyonel)" class="border p-2 w-full mb-2 rounded">
+                                <p class="text-xs font-bold mb-1">Bağlı Kategoriler:</p>
+                                <div class="flex flex-wrap gap-2 mb-2" id="brand-cat-select">
+                                    ${state.settings.categories.map(c => `<label class="bg-white px-2 py-1 border rounded text-xs cursor-pointer"><input type="checkbox" value="${c.name}"> ${c.name}</label>`).join('')}
+                                </div>
+                                <button onclick="app.addBrand()" class="bg-sea-500 text-white px-4 py-2 rounded w-full">Ekle</button>
+                            </div>
+                            <ul class="space-y-2 max-h-96 overflow-y-auto">
+                                ${state.settings.brands.map(b => `
+                                    <li class="flex justify-between items-center bg-white border p-2 rounded shadow-sm">
+                                        <div class="flex items-center gap-2">
+                                            ${b.logo ? `<img src="${b.logo}" class="w-8 h-8 object-contain">` : ''}
+                                            <div>
+                                                <div class="font-bold text-sm">${b.name}</div>
+                                                <div class="text-xs text-gray-500">${b.categories ? b.categories.join(', ') : '-'}</div>
+                                            </div>
+                                        </div>
+                                        <button onclick="app.removeBrand('${b.name}')" class="text-red-500"><i class="fa-solid fa-times"></i></button>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            }
+
+            renderAdminCampaign(c) {
+                c.innerHTML = `
+                    <div class="max-w-2xl mx-auto text-center">
+                        <div class="bg-sea-100 p-8 rounded-xl border border-sea-500 mb-8">
+                            <i class="fa-solid fa-wand-magic-sparkles text-4xl text-sea-500 mb-4"></i>
+                            <h2 class="text-2xl font-bold text-navy-900 mb-2">Toplu İskonto Robotu</h2>
+                            <p class="text-gray-600 mb-6">Seçilen kategori veya markadaki tüm ürünlerin fiyatlarını tek seferde güncelleyin.</p>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                <select id="bulk-type" class="p-3 rounded border">
+                                    <option value="category">Kategoriye Uygula</option>
+                                    <option value="brand">Markaya Uygula</option>
+                                </select>
+                                <select id="bulk-target" class="p-3 rounded border">
+                                    <!-- Populated by JS -->
+                                </select>
+                                <div class="relative">
+                                    <input type="number" id="bulk-percent" placeholder="Oran % (Örn: 10)" class="p-3 rounded border w-full">
+                                    <span class="absolute right-3 top-3 text-gray-400">%</span>
+                                </div>
+                            </div>
+                            <div class="flex gap-4">
+                                <button onclick="app.runBulkUpdate(true)" class="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-3 rounded">İndirim Yap (Fiyat Düşür)</button>
+                                <button onclick="app.runBulkUpdate(false)" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 rounded">İndirimi Sıfırla</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                // Populate targets
+                const updateTargets = () => {
+                    const type = document.getElementById('bulk-type').value;
+                    const targetSel = document.getElementById('bulk-target');
+                    const source = type === 'category' ? state.settings.categories : state.settings.brands;
+                    targetSel.innerHTML = source.map(x => `<option value="${x.name}">${x.name}</option>`).join('');
+                };
+                document.getElementById('bulk-type').addEventListener('change', updateTargets);
+                updateTargets();
+            }
+
+            renderAdminAds(c) {
+                const s = state.settings.adBanner;
+                c.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <h3 class="font-bold mb-4">Ana Sayfa Banner Reklamı</h3>
+                            <div class="bg-gray-50 p-6 rounded border">
+                                <label class="flex items-center gap-2 font-bold mb-4">
+                                    <input type="checkbox" id="ad-active" ${s.active ? 'checked' : ''} onchange="app.updateAdSettings()"> Reklam Aktif
+                                </label>
+                                <div class="space-y-3">
+                                    <input type="text" id="ad-title" value="${s.title}" class="w-full border p-2 rounded" placeholder="Reklam Başlığı" onchange="app.updateAdSettings()">
+                                    <input type="url" id="ad-image" value="${s.image}" class="w-full border p-2 rounded" placeholder="Görsel URL" onchange="app.updateAdSettings()">
+                                    <input type="text" id="ad-link" value="${s.link}" class="w-full border p-2 rounded" placeholder="Hedef Link (#)" onchange="app.updateAdSettings()">
+                                </div>
+                                <div class="mt-4">
+                                    <p class="text-xs text-gray-500 mb-1">Önizleme:</p>
+                                    <img src="${s.image}" class="w-full h-32 object-cover rounded shadow">
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="font-bold mb-4">Slider Görselleri</h3>
+                            <div class="space-y-4">
+                                ${state.settings.sliders.map((sl, i) => `
+                                    <div class="border p-4 rounded flex gap-4 items-start bg-white">
+                                        <img src="${sl.image}" class="w-24 h-16 object-cover rounded bg-gray-200">
+                                        <div class="flex-grow grid gap-2">
+                                            <input type="text" value="${sl.title}" onchange="app.updateSlider(${i}, 'title', this.value)" class="border p-1 rounded w-full text-xs font-bold">
+                                            <input type="text" value="${sl.subtitle}" onchange="app.updateSlider(${i}, 'subtitle', this.value)" class="border p-1 rounded w-full text-xs">
+                                            <input type="text" value="${sl.image}" onchange="app.updateSlider(${i}, 'image', this.value)" class="border p-1 rounded w-full text-xs">
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // --- ADMIN ACTIONS ---
+            async addCategory() {
+                const name = document.getElementById('new-cat-name').value;
+                const image = document.getElementById('new-cat-img').value;
+                const featured = document.getElementById('new-cat-featured').checked;
+                if(!name) return;
+                state.settings.categories.push({ name, image, featured });
+                await this.saveSettings();
+                this.renderAdminTab();
+            }
+            async removeCategory(name) {
+                state.settings.categories = state.settings.categories.filter(c => c.name !== name);
+                await this.saveSettings();
+                this.renderAdminTab();
+            }
+            async addBrand() {
+                const name = document.getElementById('new-brand-name').value;
+                const logo = document.getElementById('new-brand-logo').value;
+                const checkboxes = document.querySelectorAll('#brand-cat-select input:checked');
+                const categories = Array.from(checkboxes).map(cb => cb.value);
+                if(!name) return;
+                state.settings.brands.push({ name, logo, categories });
+                await this.saveSettings();
+                this.renderAdminTab();
+            }
+            async removeBrand(name) {
+                state.settings.brands = state.settings.brands.filter(b => b.name !== name);
+                await this.saveSettings();
+                this.renderAdminTab();
+            }
+            async updateAdSettings() {
+                state.settings.adBanner = {
+                    active: document.getElementById('ad-active').checked,
+                    title: document.getElementById('ad-title').value,
+                    image: document.getElementById('ad-image').value,
+                    link: document.getElementById('ad-link').value
+                };
+                await this.saveSettings();
+                this.renderAdminTab(); // Refresh preview
+            }
+            async updateSlider(idx, key, val) {
+                state.settings.sliders[idx][key] = val;
+                await this.saveSettings();
+            }
+            
+            runBulkUpdate(isDiscount) {
+                const type = document.getElementById('bulk-type').value;
+                const target = document.getElementById('bulk-target').value;
+                const percent = parseFloat(document.getElementById('bulk-percent').value);
+                
+                if (isDiscount && (isNaN(percent) || percent <= 0)) return alert("Geçerli bir oran girin.");
+                
+                this.applyBulkDiscount(type, target, isDiscount ? percent : 0);
+            }
+
+            // --- RENDER HELPERS ---
+            renderFilterSidebar() {
+                const div = document.getElementById('filter-sidebar-content');
+                if(!div) return;
+
+                const cats = ['Tümü', ...state.settings.categories.map(c => c.name)].map(c => `
+                    <button onclick="app.setCategoryFilter('${c}')" class="flex justify-between w-full text-left py-2 px-2 rounded text-sm ${state.filters.category === c ? 'bg-sea-500 text-white font-bold shadow' : 'text-gray-600 hover:bg-gray-100'}">
+                        ${c} ${state.filters.category === c ? '<i class="fa-solid fa-check"></i>' : ''}
+                    </button>
+                `).join('');
+
+                // Intelligent Brand Filter: Only show brands related to selected category
+                let visibleBrands = state.settings.brands;
+                if(state.filters.category !== 'Tümü') {
+                    visibleBrands = state.settings.brands.filter(b => b.categories && b.categories.includes(state.filters.category));
+                }
+
+                const brands = visibleBrands.map(b => `
+                    <label class="flex items-center space-x-2 cursor-pointer mt-2 group">
+                        <input type="checkbox" class="filter-checkbox hidden" onchange="app.toggleBrandFilter('${b.name}')" ${state.filters.brands.includes(b.name) ? 'checked' : ''}>
+                        <div class="w-4 h-4 border rounded flex items-center justify-center bg-white group-hover:border-sea-500"><i class="fa-solid fa-check text-white text-[10px] hidden"></i></div>
+                        <span class="text-sm text-gray-600 group-hover:text-sea-500">${b.name}</span>
+                    </label>
+                `).join('');
+
+                div.innerHTML = `
+                    <div class="mb-6"><h3 class="font-bold mb-2 text-navy-900 uppercase text-xs tracking-wider">Kategoriler</h3><div class="space-y-1">${cats}</div></div>
+                    <div><h3 class="font-bold mb-2 text-navy-900 uppercase text-xs tracking-wider">Markalar</h3>${brands.length ? brands : '<p class="text-xs text-gray-400">Marka yok.</p>'}</div>
+                `;
+            }
+
+            renderProducts() {
+                const grid = document.getElementById('product-grid');
+                if(!grid) return;
+
+                let list = state.products.filter(p => {
+                    const matchesCat = state.filters.category === 'Tümü' || p.category === state.filters.category;
+                    const matchesBrand = state.filters.brands.length === 0 || state.filters.brands.includes(p.brand);
+                    const s = state.filters.search.toLowerCase();
+                    const matchesSearch = !s || p.name.toLowerCase().includes(s) || (p.partNo && p.partNo.toLowerCase().includes(s));
+                    return matchesCat && matchesBrand && matchesSearch;
+                });
+
+                document.getElementById('cat-title').innerText = state.filters.category === 'Tümü' ? 'Tüm Ürünler' : state.filters.category;
+                document.getElementById('prod-count').innerText = `${list.length} ürün`;
+
+                if(!list.length) { grid.innerHTML = '<div class="col-span-full text-center py-20"><i class="fa-regular fa-folder-open text-4xl text-gray-300 mb-4"></i><p class="text-gray-500">Ürün bulunamadı.</p></div>'; return; }
+
+                grid.innerHTML = list.map(p => {
+                    const isDiscounted = p.discountPrice && p.discountPrice < p.price;
+                    const finalPrice = isDiscounted ? p.discountPrice : p.price;
+                    const displayPrice = this.formatPrice(finalPrice, p.currency);
+                    const oldPrice = isDiscounted ? this.formatPrice(p.price, p.currency) : '';
+                    const hasStock = p.stock > 0;
+
+                    return `
+                        <div class="bg-white rounded-xl shadow-sm hover:shadow-2xl transition-all duration-300 border border-gray-100 flex flex-col group relative overflow-hidden">
+                            ${isDiscounted ? '<div class="absolute top-3 left-3 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded shadow-md z-10 animate-pulse">İNDİRİM</div>' : ''}
+                            ${!hasStock ? '<div class="absolute inset-0 bg-white/70 z-20 flex items-center justify-center"><span class="bg-gray-800 text-white px-4 py-2 font-bold rounded shadow-lg transform -rotate-12">TÜKENDİ</span></div>' : ''}
+                            
+                            <div class="h-52 bg-gray-50 p-6 relative overflow-hidden flex items-center justify-center">
+                                <img src="${p.image}" class="max-h-full max-w-full object-contain mix-blend-multiply transform group-hover:scale-110 transition duration-700">
+                            </div>
+                            
+                            <div class="p-5 flex flex-col flex-grow">
+                                <div class="flex justify-between items-start mb-2">
+                                    <span class="text-[10px] font-bold text-sea-500 uppercase tracking-wider bg-sea-50 px-2 py-1 rounded">${p.brand}</span>
+                                    <span class="text-[10px] text-gray-400 font-mono">${p.partNo || ''}</span>
+                                </div>
+                                <h3 class="font-bold text-navy-900 mb-1 leading-tight text-lg line-clamp-2 min-h-[3.5rem]">${p.name}</h3>
+                                
+                                <div class="mt-auto pt-4 border-t border-gray-100 flex items-end justify-between">
+                                    <div class="flex flex-col">
+                                        ${isDiscounted ? `<span class="text-xs text-gray-400 line-through mb-[-4px]">${oldPrice}</span>` : ''}
+                                        <span class="text-xl font-bold ${isDiscounted ? 'text-red-600' : 'text-navy-900'}">${displayPrice}</span>
+                                    </div>
+                                    <button onclick="app.addToCart('${p.id}')" ${!hasStock ? 'disabled' : ''} class="w-10 h-10 rounded-full flex items-center justify-center transition shadow-lg ${hasStock ? 'bg-navy-900 text-white hover:bg-gold-500 hover:text-navy-900 hover:scale-110' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}">
+                                        <i class="fa-solid fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // --- USER ACTIONS ---
+            setCategoryFilter(c) { state.filters.category = c; state.filters.brands = []; this.navigate('shop'); }
+            setSearchFilter(v) { state.filters.search = v; this.renderProducts(); }
+            toggleBrandFilter(b) { state.filters.brands.includes(b) ? state.filters.brands = state.filters.brands.filter(x=>x!==b) : state.filters.brands.push(b); this.renderProducts(); }
+            filterByBrand(b) { state.filters.brands = [b]; state.filters.category = 'Tümü'; this.navigate('shop'); }
+            resetFilters() { state.filters = { category: 'Tümü', brands: [], search: '' }; this.refreshUI(); }
+            
+            // --- CART ---
+            addToCart(id) {
+                const p = state.products.find(x => x.id === id);
+                if(!p || p.stock <= 0) return;
+                
+                const exist = state.cart.find(x => x.id === id);
+                if(exist) {
+                   if(exist.qty < p.stock) exist.qty++;
+                   else return this.showToast("Stok yetersiz.", true);
+                } else {
+                    state.cart.push({ ...p, qty: 1 });
+                }
+                this.updateCartUI();
+                this.showToast(`${p.name} sepete eklendi.`);
+            }
+
+            updateCartUI() {
+                const count = state.cart.reduce((a,b)=>a+b.qty,0);
+                document.getElementById('cart-count').innerText = count;
+                const div = document.getElementById('cart-items');
+                if(!div) return;
+                let total = 0;
+                div.innerHTML = state.cart.map((item, idx) => {
+                    const price = (item.discountPrice && item.discountPrice < item.price) ? item.discountPrice : item.price;
+                    total += this.convertPrice(price, item.currency) * item.qty;
+                    return `
+                        <div class="flex gap-3 mb-4 animate-fade-in border-b pb-2">
+                            <img src="${item.image}" class="w-16 h-16 object-cover rounded border">
+                            <div class="flex-grow">
+                                <h4 class="font-bold text-sm text-navy-900">${item.name}</h4>
+                                <div class="text-xs text-gray-500 mb-1">${this.formatPrice(price, item.currency)} x ${item.qty}</div>
+                                <div class="flex justify-between items-center">
+                                    <span class="font-bold text-sea-500">${this.formatPrice(price * item.qty, item.currency)}</span>
+                                    <button onclick="app.removeFromCart(${idx})" class="text-red-400 hover:text-red-600"><i class="fa-solid fa-trash"></i></button>
+                                </div>
+                            </div>
+                        </div>`;
+                }).join('');
+                document.getElementById('cart-total').innerText = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: state.displayCurrency }).format(total);
+            }
+
+            removeFromCart(idx) { state.cart.splice(idx,1); this.updateCartUI(); }
+            toggleCart() { document.getElementById('cart-modal').classList.toggle('hidden'); document.getElementById('cart-panel').classList.toggle('translate-x-full'); }
+            checkout() { alert("Sipariş Demo: Başarılı!"); state.cart=[]; this.updateCartUI(); this.toggleCart(); }
+
+            // --- SLIDER & UTILS ---
+            startSliderEffect() {
+                const container = document.getElementById('slider-container');
+                const textContainer = document.getElementById('slider-text');
+                if(!container || !state.settings.sliders.length) return;
+                const slide = state.settings.sliders[state.sliderIndex];
+                container.innerHTML = `<img src="${slide.image}" class="w-full h-full object-cover slider-image animate-fade-in">`;
+                textContainer.innerHTML = `
+                    <h2 class="text-gold-400 font-bold tracking-widest text-sm mb-2 uppercase animate-fade-in">${slide.subtitle}</h2>
+                    <h1 class="text-4xl md:text-6xl font-bold mb-6 leading-tight animate-fade-in text-shadow-lg">${slide.title}</h1>
+                    <button onclick="app.navigate('shop')" class="bg-sea-500 hover:bg-white hover:text-navy-900 text-white font-bold py-3 px-8 rounded transition shadow-lg transform hover:scale-105">ALIŞVERİŞE BAŞLA</button>
+                `;
+            }
+            startSlider() { setInterval(() => { state.sliderIndex = (state.sliderIndex + 1) % state.settings.sliders.length; this.startSliderEffect(); }, 6000); this.startSliderEffect(); }
+            changeDisplayCurrency(c) { state.displayCurrency = c; this.refreshUI(); }
+            
+            // --- AUTH ---
+            toggleAdminLogin() { state.isAdmin ? this.navigate('admin') : document.getElementById('admin-modal').classList.remove('hidden'); }
+            handleAdminLogin(e) { e.preventDefault(); if(document.getElementById('admin-password').value==='admin'){state.isAdmin=true;document.getElementById('admin-modal').classList.add('hidden');this.navigate('admin');}else alert("Hata"); }
+            logoutAdmin() { state.isAdmin=false; this.navigate('home'); }
+            setAdminTab(t) { state.adminTab = t; this.renderAdminTab(); }
+
+            showToast(msg, err=false) {
+                const t = document.getElementById('toast');
+                document.getElementById('toast-message').innerText = msg;
+                t.querySelector('i').className = err ? 'fa-solid fa-circle-exclamation text-white' : 'fa-solid fa-check-circle text-green-400';
+                t.className = `fixed bottom-5 right-5 px-6 py-4 rounded-lg shadow-xl transform transition-all duration-300 z-50 flex items-center gap-3 ${err?'bg-red-600':'bg-navy-900'} text-white translate-y-0 opacity-100`;
+                setTimeout(()=>t.classList.add('translate-y-20','opacity-0'), 3000);
+            }
+            bindEvents() { window.app = this; }
+        }
+        const appInstance = new App();
+    </script>
 </body>
 </html>
