@@ -1,10 +1,13 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap');
 
 :root {
     --marine-dark: #002B49;
     --marine-blue: #005F88;
     --marine-accent: #FF6B00;
     --bg-light: #f3f4f6;
+    --success: #10B981;
+    --warning: #F59E0B;
+    --danger: #EF4444;
 }
 
 body {
@@ -16,19 +19,10 @@ body {
     overflow-x: hidden;
 }
 
-/* --- HEADER YAPISI (OVAL & LOGO) --- */
-.header-wrapper {
-    position: relative;
-    margin-bottom: 80px; /* Logo taşma payı */
-}
+/* --- HEADER YAPISI --- */
+.header-wrapper { position: relative; margin-bottom: 90px; }
+.header-top { background-color: var(--marine-dark); padding-bottom: 60px; position: relative; }
 
-.header-top {
-    background-color: var(--marine-dark);
-    padding-bottom: 50px; /* Curve payı */
-    position: relative;
-}
-
-/* Oval Kıvrım */
 .header-curve {
     background-color: var(--marine-dark);
     height: 80px;
@@ -36,107 +30,115 @@ body {
     position: absolute;
     bottom: -40px;
     left: 0;
-    border-bottom-left-radius: 50% 40px;
-    border-bottom-right-radius: 50% 40px;
+    border-bottom-left-radius: 50% 30px;
+    border-bottom-right-radius: 50% 30px;
     z-index: 10;
-    box-shadow: 0 15px 30px -10px rgba(0, 27, 56, 0.3);
+    box-shadow: 0 20px 40px -10px rgba(0, 27, 56, 0.4);
 }
 
-/* LOGO KONUMLANDIRMA (Kritik Bölüm) */
+/* LOGO */
 .logo-area {
     position: absolute;
     left: 50%;
-    bottom: -70px; /* Curve'den aşağı sarkar */
+    bottom: -80px;
     transform: translateX(-50%);
     z-index: 20;
-    width: 25vw; /* Ekranın 4'te 1'i */
-    min-width: 250px; /* Mobilde çok küçülmesin */
+    width: 250px;
+    height: 120px;
     display: flex;
     justify-content: center;
     align-items: center;
-    /* Beyaz kutu ve border kaldırıldı - Şeffaf */
-}
-
-.logo-area img {
-    width: 100%;
-    height: auto;
-    object-fit: contain;
-    filter: drop-shadow(0 10px 10px rgba(0,0,0,0.2)); /* Logoya hafif gölge */
     transition: transform 0.3s ease;
 }
+.logo-area:hover { transform: translateX(-50%) scale(1.05); }
+.logo-area img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.2)); }
 
-.logo-area img:hover {
-    transform: scale(1.05) translateX(-50%); /* Hover efekti */
-}
-
-/* --- DİĞER BİLEŞENLER --- */
-
-/* Arama Barı */
-.search-container input {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-    transition: all 0.3s;
-}
-.search-container input:focus {
-    background: white;
-    color: #333;
-}
-.search-container input::placeholder {
-    color: rgba(255,255,255,0.7);
-}
-
-/* Ürün Kartı */
+/* --- ÜRÜN KARTLARI --- */
 .product-card {
     transition: all 0.3s ease;
     border: 1px solid transparent;
+    position: relative;
 }
 .product-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+    box-shadow: 0 20px 30px rgba(0,0,0,0.1);
     border-color: var(--marine-blue);
 }
 
-/* Kategori Menüsü (Aktif) */
-.cat-link.active {
-    background-color: var(--marine-blue);
+/* Stok Rozetleri */
+.stock-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 4px;
     color: white;
-    padding-left: 1rem;
-    border-radius: 0.5rem;
+    font-weight: bold;
+    z-index: 5;
+}
+.stock-ok { background-color: var(--success); }
+.stock-low { background-color: var(--warning); }
+.stock-out { background-color: var(--danger); }
+
+/* İndirim Rozeti */
+.discount-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: var(--marine-accent);
+    color: white;
+    font-weight: bold;
+    font-size: 0.8rem;
+    padding: 4px 8px;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+    transform: rotate(15deg);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
-/* --- MARKA SLIDER (SONSUZ DÖNGÜ) --- */
+/* Eski Fiyat (Üstü Çizili) */
+.old-price {
+    text-decoration: line-through;
+    color: #9CA3AF;
+    font-size: 0.9rem;
+    margin-right: 5px;
+}
+
+/* --- ADMIN PANELİ --- */
+.admin-tab-btn {
+    padding: 10px 20px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    color: rgba(255,255,255,0.6);
+}
+.admin-tab-btn.active {
+    border-bottom-color: var(--marine-accent);
+    color: white;
+    font-weight: bold;
+}
+.admin-tab-content { display: none; }
+.admin-tab-content.active { display: block; }
+
+/* --- MARKA SLIDER --- */
 .brand-marquee {
     background: white;
-    padding: 30px 0;
+    padding: 20px 0;
     overflow: hidden;
-    white-space: nowrap;
     position: relative;
     border-top: 1px solid #e5e7eb;
 }
+.marquee-content { display: flex; animation: marquee 30s linear infinite; width: max-content; }
+.brand-item { width: 150px; padding: 0 20px; display: flex; align-items: center; justify-content: center; }
+.brand-item img { max-width: 100%; max-height: 50px; filter: grayscale(100%); opacity: 0.6; transition: 0.3s; }
+.brand-item img:hover { filter: grayscale(0%); opacity: 1; }
+@keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
-.marquee-content {
-    display: inline-flex;
-    animation: marquee 25s linear infinite;
-}
-
-.brand-item {
-    width: 180px;
-    padding: 0 30px;
-    opacity: 0.6;
-    transition: opacity 0.3s;
-    filter: grayscale(100%);
-}
-
-.brand-item:hover {
-    opacity: 1;
-    filter: grayscale(0%);
-}
-
-@keyframes marquee {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); } /* İçerik 2 kere tekrarlandığı için %50 kaydırıyoruz */
-}
-
-/* Yardımcılar */
+/* YARDIMCILAR */
 .hide { display: none !important; }
-.admin-link.active { background-color: var(--marine-blue); border-right: 4px solid var(--marine-accent); }
