@@ -26,156 +26,247 @@
 </head>
 <body>
 
-    <!-- HEADER ALANI -->
+    <!-- HEADER -->
     <header class="header-wrapper">
         <div class="header-top text-white">
             <div class="container mx-auto px-4 py-4">
                 
-                <!-- Üst Bilgi Barı: Kur & Giriş -->
-                <div class="flex flex-col md:flex-row justify-between items-center text-sm border-b border-white/20 pb-3 mb-4 gap-4">
+                <!-- Üst Bar -->
+                <div class="flex flex-col md:flex-row justify-between items-center text-sm border-b border-white/10 pb-3 mb-4 gap-4">
                     <!-- Kur Bilgisi -->
-                    <div class="flex items-center gap-3 bg-white/10 px-3 py-1 rounded-full">
-                        <i class="fa-solid fa-coins text-marine-accent"></i>
-                        <select id="currency-selector" onchange="changeCurrency(this.value)" class="bg-transparent text-white text-xs font-bold cursor-pointer focus:outline-none">
+                    <div class="flex items-center gap-3 bg-white/5 px-4 py-1.5 rounded-full backdrop-blur-sm">
+                        <i class="fa-solid fa-globe text-marine-accent"></i>
+                        <select id="currency-selector" onchange="changeCurrency(this.value)" class="bg-transparent text-white text-xs font-bold cursor-pointer focus:outline-none uppercase">
                             <option value="TRY" class="text-black">TRY (₺)</option>
                             <option value="USD" class="text-black">USD ($)</option>
                             <option value="EUR" class="text-black">EUR (€)</option>
                         </select>
-                        <span id="exchange-rates-info" class="text-xs text-yellow-300 font-mono border-l border-white/30 pl-3">
-                            <i class="fa-solid fa-spinner fa-spin"></i> TCMB...
+                        <div class="h-4 w-px bg-white/30"></div>
+                        <span id="exchange-rates-info" class="text-xs font-mono tracking-tight text-gray-300">
+                            Veri Bekleniyor...
                         </span>
                     </div>
 
-                    <!-- Sağ Linkler -->
-                    <div class="flex gap-4">
-                        <a href="javascript:void(0)" onclick="toggleAdminPanel()" class="hover:text-marine-accent transition"><i class="fa-solid fa-user-shield"></i> Yönetici</a>
-                        <a href="#" class="hover:text-marine-accent transition"><i class="fa-solid fa-circle-question"></i> Yardım</a>
+                    <div class="flex gap-6 text-xs font-semibold tracking-wide">
+                        <a href="javascript:void(0)" onclick="toggleAdminPanel()" class="hover:text-marine-accent transition flex items-center gap-2">
+                            <i class="fa-solid fa-lock"></i> YÖNETİCİ
+                        </a>
+                        <a href="#" class="hover:text-marine-accent transition">YARDIM</a>
                     </div>
                 </div>
 
-                <!-- Ana Navigasyon & Arama -->
-                <div class="flex flex-col md:flex-row justify-between items-center h-auto md:h-16 gap-4">
-                    
-                    <!-- Sol Menü -->
-                    <nav class="flex space-x-6 font-bold text-sm tracking-wide w-full md:w-1/3 justify-center md:justify-start">
-                        <a href="javascript:void(0)" onclick="router('home')" class="hover:text-marine-accent transition py-2">ANA SAYFA</a>
-                        <a href="javascript:void(0)" onclick="router('products')" class="hover:text-marine-accent transition py-2">MAĞAZA</a>
+                <!-- Navigasyon -->
+                <div class="flex flex-col md:flex-row justify-between items-center md:h-16 gap-4">
+                    <nav class="flex gap-8 font-bold text-sm tracking-wider w-full md:w-1/3 justify-center md:justify-start">
+                        <a href="javascript:void(0)" onclick="router('home')" class="hover:text-marine-accent py-2 border-b-2 border-transparent hover:border-marine-accent transition">ANA SAYFA</a>
+                        <a href="javascript:void(0)" onclick="router('products')" class="hover:text-marine-accent py-2 border-b-2 border-transparent hover:border-marine-accent transition">MAĞAZA</a>
                     </nav>
                     
-                    <!-- Orta Boşluk (Logo Gelecek) -->
-                    <div class="w-full md:w-1/3 hidden md:block"></div>
+                    <div class="w-full md:w-1/3 hidden md:block"></div> <!-- Logo Boşluğu -->
 
-                    <!-- Sağ Alan: Arama & Sepet -->
-                    <div class="flex items-center justify-end w-full md:w-1/3 gap-4">
+                    <div class="flex items-center justify-end w-full md:w-1/3 gap-6">
                         <!-- Arama -->
-                        <div class="search-container relative hidden md:block w-full max-w-[200px]">
-                            <input type="text" id="header-search" placeholder="Ürün ara..." onkeyup="headerSearch(this.value)" class="w-full pl-3 pr-8 py-1 rounded-full text-sm border border-transparent focus:border-marine-accent focus:outline-none">
-                            <i class="fa-solid fa-magnifying-glass absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
-                            <!-- Arama Sonuçları Dropdown -->
-                            <div id="search-results" class="absolute top-full left-0 w-full bg-white text-black mt-2 rounded shadow-xl z-50 hidden max-h-60 overflow-y-auto"></div>
+                        <div class="relative hidden md:block w-48">
+                            <input type="text" placeholder="Ürün ara..." onkeyup="headerSearch(this.value)" class="w-full bg-white/10 border border-transparent focus:border-marine-accent focus:bg-white focus:text-black rounded-full px-4 py-1.5 text-xs transition outline-none placeholder-gray-400 text-white">
+                            <div id="search-results" class="absolute top-full left-0 w-full bg-white text-black mt-2 rounded-lg shadow-xl z-50 hidden max-h-60 overflow-y-auto border border-gray-100"></div>
                         </div>
 
                         <!-- Sepet -->
-                        <div class="relative cursor-pointer hover:text-marine-accent transition group" onclick="router('cart')">
-                            <div class="p-2 bg-white/10 rounded-full group-hover:bg-white group-hover:text-marine-dark transition">
-                                <i class="fa-solid fa-cart-shopping text-xl"></i>
+                        <div class="relative cursor-pointer group" onclick="router('cart')">
+                            <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-marine-accent transition">
+                                <i class="fa-solid fa-cart-shopping text-white"></i>
                             </div>
-                            <span id="cart-count" class="absolute -top-1 -right-1 bg-marine-accent text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center border-2 border-marine-dark">0</span>
+                            <span id="cart-count" class="absolute -top-1 -right-1 bg-white text-marine-dark text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center border border-marine-dark">0</span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
         
-        <!-- OVAL KIVRIM -->
         <div class="header-curve"></div>
 
-        <!-- LOGO ALANI (Şeffaf & Büyük) -->
+        <!-- LOGO -->
         <div class="logo-area" onclick="router('home')">
-            <!-- Logo.png yoksa yazı görünür -->
             <img src="logo.png" alt="MarinEkipman" onerror="this.style.display='none'; document.getElementById('backup-logo').classList.remove('hide');">
-            <!-- Yedek Metin Logo -->
-            <div id="backup-logo" class="hide text-center cursor-pointer">
-                <h1 class="text-3xl font-black text-marine-dark tracking-tighter drop-shadow-md">
+            <div id="backup-logo" class="hide text-center cursor-pointer select-none">
+                <h1 class="text-3xl font-black text-marine-dark tracking-tighter">
                     MARIN<span class="text-marine-accent">EKIPMAN</span>
                 </h1>
-                <span class="text-xs text-gray-500 font-bold tracking-widest">MARINE STORE</span>
+                <div class="h-1 w-1/2 bg-marine-accent mx-auto mt-1"></div>
             </div>
         </div>
     </header>
 
-    <!-- SAYFA İÇERİĞİ -->
-    <main id="main-content" class="flex-grow container mx-auto px-4 min-h-[500px] mb-12">
-        <!-- JS ile dinamik doldurulacak -->
+    <!-- MAIN -->
+    <main id="main-content" class="flex-grow container mx-auto px-4 min-h-[600px] mb-12">
+        <!-- JS İçerik -->
     </main>
 
-    <!-- MARKA SLIDER (Infinite Marquee) -->
-    <section class="mt-auto">
-        <h3 class="text-center text-gray-400 text-sm font-bold uppercase tracking-widest mb-4">Çalıştığımız Markalar</h3>
-        <div class="brand-marquee">
-            <div class="marquee-content" id="brand-track">
-                <!-- JS ile logolar doldurulacak -->
-            </div>
+    <!-- FOOTER ÜSTÜ SLIDER -->
+    <section class="mt-auto border-t">
+        <div class="container mx-auto px-4 py-4">
+             <h4 class="text-center text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Güvenilir Markalarımız</h4>
+             <div class="brand-marquee" id="brand-track-container">
+                 <div class="marquee-content" id="brand-track">
+                     <!-- JS ile dolar -->
+                 </div>
+             </div>
         </div>
     </section>
 
     <!-- FOOTER -->
-    <footer class="bg-marine-dark text-white pt-16 pb-8 border-t-4 border-marine-accent">
-        <div class="container mx-auto px-4">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+    <footer class="bg-marine-dark text-white pt-12 pb-6 border-t-4 border-marine-accent">
+        <div class="container mx-auto px-4 text-center md:text-left">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 text-sm text-gray-400">
                 <div>
-                    <h4 class="text-xl font-bold mb-4 text-marine-accent">MarinEkipman</h4>
-                    <p class="text-gray-400 text-sm leading-relaxed">
-                        Denizcilik sektörünün lider markalarını en uygun fiyatlarla ve güvenli alışveriş imkanıyla sunuyoruz.
-                    </p>
+                    <h5 class="text-white font-bold mb-4">MarinEkipman</h5>
+                    <p>Denizcilik tutkunları için en kaliteli ekipmanlar.</p>
                 </div>
                 <div>
-                    <h4 class="font-bold mb-4">Hızlı Menü</h4>
-                    <ul class="text-sm text-gray-400 space-y-2">
-                        <li><a href="#" onclick="router('products')" class="hover:text-white">Tüm Ürünler</a></li>
-                        <li><a href="#" class="hover:text-white">İndirimdekiler</a></li>
-                        <li><a href="#" class="hover:text-white">Yeni Gelenler</a></li>
+                    <h5 class="text-white font-bold mb-4">Kurumsal</h5>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="hover:text-marine-accent">Hakkımızda</a></li>
+                        <li><a href="#" class="hover:text-marine-accent">İletişim</a></li>
                     </ul>
                 </div>
                 <div>
-                    <h4 class="font-bold mb-4">İletişim</h4>
-                    <ul class="text-sm text-gray-400 space-y-2">
-                        <li><i class="fa-solid fa-phone mr-2"></i> +90 212 555 0000</li>
-                        <li><i class="fa-solid fa-envelope mr-2"></i> info@marinekipman.com</li>
-                        <li><i class="fa-brands fa-whatsapp mr-2"></i> +90 555 555 5555</li>
+                    <h5 class="text-white font-bold mb-4">Yardım</h5>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="hover:text-marine-accent">Kargo Takip</a></li>
+                        <li><a href="#" class="hover:text-marine-accent">İade Koşulları</a></li>
                     </ul>
                 </div>
                 <div>
-                    <h4 class="font-bold mb-4">Bülten</h4>
-                    <div class="flex">
-                        <input type="text" placeholder="E-posta adresiniz" class="w-full px-3 py-2 text-black rounded-l-md focus:outline-none">
-                        <button class="bg-marine-accent px-4 py-2 rounded-r-md hover:bg-orange-600 font-bold">Kayıt</button>
+                    <h5 class="text-white font-bold mb-4">Ödeme</h5>
+                    <div class="flex justify-center md:justify-start gap-3 text-2xl">
+                        <i class="fa-brands fa-cc-visa"></i>
+                        <i class="fa-brands fa-cc-mastercard"></i>
                     </div>
                 </div>
             </div>
-            <div class="border-t border-white/10 pt-8 text-center text-sm text-gray-500 flex flex-col md:flex-row justify-between items-center">
-                <p>&copy; 2025 MarinEkipman. Tüm hakları saklıdır.</p>
-                <div class="flex gap-4 text-2xl mt-4 md:mt-0 opacity-50">
-                    <i class="fa-brands fa-cc-visa"></i>
-                    <i class="fa-brands fa-cc-mastercard"></i>
-                    <i class="fa-brands fa-cc-amex"></i>
-                </div>
-            </div>
+            <p class="text-xs text-gray-600 border-t border-white/10 pt-4 text-center">&copy; 2025 MarinEkipman. Tüm hakları saklıdır.</p>
         </div>
     </footer>
 
     <!-- ADMIN PANELİ -->
-    <div id="admin-app" class="fixed inset-0 bg-gray-100 z-[100] flex hide">
-        <aside class="w-64 bg-marine-dark text-white flex flex-col shadow-2xl">
-            <div class="p-6 font-bold text-xl border-b border-white/10 bg-marine-blue/20">Yönetim Paneli</div>
-            <nav class="flex-grow py-4 space-y-1">
-                <a href="#" onclick="adminRouter('products')" class="admin-link block px-6 py-3 hover:bg-white/5 transition">Ürün Yönetimi</a>
-                <a href="#" onclick="adminRouter('slider')" class="admin-link block px-6 py-3 hover:bg-white/5 transition">Slider Ayarları</a>
+    <div id="admin-app" class="fixed inset-0 bg-gray-900 z-[100] flex text-white hide font-sans">
+        <!-- Admin Sidebar -->
+        <aside class="w-64 bg-gray-800 flex flex-col shadow-xl border-r border-gray-700">
+            <div class="p-6 text-xl font-bold text-marine-accent border-b border-gray-700 tracking-wider">YÖNETİM</div>
+            <nav class="flex-grow py-4">
+                <div class="px-4 text-xs font-bold text-gray-500 mb-2 uppercase">Menü</div>
+                <div onclick="switchAdminTab('products')" class="admin-tab-btn active hover:bg-gray-700">Ürün Yönetimi</div>
+                <div onclick="switchAdminTab('brands')" class="admin-tab-btn hover:bg-gray-700">Marka & Slider</div>
+                <div onclick="switchAdminTab('campaigns')" class="admin-tab-btn hover:bg-gray-700">Kampanyalar</div>
             </nav>
-            <button onclick="toggleAdminPanel()" class="p-4 bg-red-600 hover:bg-red-700 font-bold transition">Güvenli Çıkış</button>
+            <button onclick="toggleAdminPanel()" class="p-4 bg-red-600 hover:bg-red-700 font-bold transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-power-off"></i> Çıkış
+            </button>
         </aside>
-        <main id="admin-content" class="flex-grow p-8 overflow-y-auto bg-gray-100">
-            <!-- JS Dolduracak -->
+
+        <!-- Admin Content -->
+        <main class="flex-grow p-8 overflow-y-auto bg-gray-900">
+            
+            <!-- ÜRÜNLER TAB -->
+            <div id="tab-products" class="admin-tab-content active">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">Ürün Listesi</h2>
+                    <button onclick="showProductForm()" class="bg-marine-accent px-4 py-2 rounded font-bold hover:bg-orange-600">+ Yeni Ürün</button>
+                </div>
+                
+                <!-- Ürün Ekleme/Düzenleme Formu -->
+                <div id="product-form" class="bg-gray-800 p-6 rounded-lg mb-6 border border-gray-700 hide">
+                    <h3 class="font-bold mb-4 text-lg border-b border-gray-700 pb-2">Ürün Detayı</h3>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <input id="prod-name" type="text" placeholder="Ürün Adı" class="bg-gray-700 border border-gray-600 rounded p-2 text-white">
+                        <select id="prod-brand" class="bg-gray-700 border border-gray-600 rounded p-2 text-white">
+                            <!-- JS Dolduracak -->
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-4 gap-4 mb-4">
+                        <input id="prod-price" type="number" placeholder="Fiyat" class="bg-gray-700 border border-gray-600 rounded p-2 text-white">
+                        <select id="prod-curr" class="bg-gray-700 border border-gray-600 rounded p-2 text-white">
+                            <option value="TRY">TRY</option>
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                        </select>
+                        <input id="prod-stock" type="number" placeholder="Stok Adedi" class="bg-gray-700 border border-gray-600 rounded p-2 text-white">
+                        <select id="prod-cat" class="bg-gray-700 border border-gray-600 rounded p-2 text-white">
+                            <option value="Elektronik">Elektronik</option>
+                            <option value="Güvenlik">Güvenlik</option>
+                            <option value="Aksesuar">Aksesuar</option>
+                        </select>
+                    </div>
+                    <input id="prod-img" type="text" placeholder="Resim URL" class="w-full bg-gray-700 border border-gray-600 rounded p-2 text-white mb-4">
+                    <textarea id="prod-desc" placeholder="Açıklama" class="w-full bg-gray-700 border border-gray-600 rounded p-2 text-white mb-4 h-20"></textarea>
+                    
+                    <div class="flex justify-end gap-3">
+                        <button onclick="closeProductForm()" class="px-4 py-2 bg-gray-600 rounded hover:bg-gray-500">İptal</button>
+                        <button onclick="saveProduct()" class="px-4 py-2 bg-green-600 rounded hover:bg-green-500 font-bold">Kaydet</button>
+                    </div>
+                </div>
+
+                <div class="bg-gray-800 rounded-lg overflow-hidden border border-gray-700">
+                    <table class="w-full text-left text-sm text-gray-300">
+                        <thead class="bg-gray-700 text-white font-bold">
+                            <tr>
+                                <th class="p-3">Görsel</th>
+                                <th class="p-3">Ürün</th>
+                                <th class="p-3">Marka</th>
+                                <th class="p-3">Fiyat</th>
+                                <th class="p-3">Stok</th>
+                                <th class="p-3 text-right">İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-product-list"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- MARKALAR TAB -->
+            <div id="tab-brands" class="admin-tab-content">
+                <h2 class="text-2xl font-bold mb-6">Marka Yönetimi</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="bg-gray-800 p-6 rounded-lg border border-gray-700">
+                        <h3 class="font-bold mb-4">Yeni Marka Ekle</h3>
+                        <div class="flex gap-2">
+                            <input id="brand-name-input" type="text" placeholder="Marka Adı" class="bg-gray-700 p-2 rounded w-1/3 border border-gray-600">
+                            <input id="brand-img-input" type="text" placeholder="Logo URL" class="bg-gray-700 p-2 rounded w-2/3 border border-gray-600">
+                        </div>
+                        <button onclick="addBrand()" class="mt-4 w-full bg-marine-blue py-2 rounded font-bold">Ekle</button>
+                    </div>
+                    <div class="bg-gray-800 p-6 rounded-lg border border-gray-700">
+                        <h3 class="font-bold mb-4">Kayıtlı Markalar</h3>
+                        <ul id="admin-brand-list" class="space-y-2 max-h-60 overflow-y-auto"></ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KAMPANYALAR TAB -->
+            <div id="tab-campaigns" class="admin-tab-content">
+                <h2 class="text-2xl font-bold mb-6">Kampanyalar</h2>
+                <div class="bg-gray-800 p-6 rounded-lg border border-gray-700 mb-6">
+                    <h3 class="font-bold mb-4 text-marine-accent">Kampanya Oluştur</h3>
+                    <p class="text-sm text-gray-400 mb-4">Seçilen markanın tüm ürünlerine yüzde bazlı indirim uygular.</p>
+                    <div class="flex gap-4 items-end">
+                        <div class="w-1/3">
+                            <label class="block text-xs mb-1">Marka</label>
+                            <select id="camp-brand" class="w-full bg-gray-700 p-2 rounded border border-gray-600"></select>
+                        </div>
+                        <div class="w-1/3">
+                            <label class="block text-xs mb-1">İndirim Oranı (%)</label>
+                            <input type="number" id="camp-percent" class="w-full bg-gray-700 p-2 rounded border border-gray-600" placeholder="10">
+                        </div>
+                        <div class="w-1/3">
+                            <button onclick="addCampaign()" class="w-full bg-green-600 py-2 rounded font-bold">Uygula</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <h3 class="font-bold mb-2">Aktif Kampanyalar</h3>
+                <div id="active-campaigns" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+            </div>
+
         </main>
     </div>
 
