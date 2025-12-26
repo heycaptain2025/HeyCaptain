@@ -19,126 +19,80 @@ body {
     overflow-x: hidden;
 }
 
-/* --- HEADER YAPISI --- */
+/* --- HEADER --- */
 .header-wrapper { position: relative; margin-bottom: 90px; }
 .header-top { background-color: var(--marine-dark); padding-bottom: 60px; position: relative; }
-
 .header-curve {
     background-color: var(--marine-dark);
-    height: 80px;
-    width: 100%;
-    position: absolute;
-    bottom: -40px;
-    left: 0;
-    border-bottom-left-radius: 50% 30px;
-    border-bottom-right-radius: 50% 30px;
-    z-index: 10;
-    box-shadow: 0 20px 40px -10px rgba(0, 27, 56, 0.4);
+    height: 80px; width: 100%; position: absolute; bottom: -40px; left: 0;
+    border-bottom-left-radius: 50% 30px; border-bottom-right-radius: 50% 30px;
+    z-index: 10; box-shadow: 0 20px 40px -10px rgba(0, 27, 56, 0.4);
 }
 
-/* LOGO */
 .logo-area {
-    position: absolute;
-    left: 50%;
-    bottom: -80px;
-    transform: translateX(-50%);
-    z-index: 20;
-    width: 250px;
-    height: 120px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    position: absolute; left: 50%; bottom: -80px; transform: translateX(-50%);
+    z-index: 20; width: 250px; height: 120px; display: flex; justify-content: center; align-items: center;
     transition: transform 0.3s ease;
 }
 .logo-area:hover { transform: translateX(-50%) scale(1.05); }
 .logo-area img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.2)); }
 
 /* --- ÜRÜN KARTLARI --- */
-.product-card {
-    transition: all 0.3s ease;
-    border: 1px solid transparent;
-    position: relative;
-}
-.product-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 20px 30px rgba(0,0,0,0.1);
-    border-color: var(--marine-blue);
-}
+.product-card { transition: all 0.3s ease; border: 1px solid transparent; position: relative; background: white; }
+.product-card:hover { transform: translateY(-5px); box-shadow: 0 20px 30px rgba(0,0,0,0.1); border-color: var(--marine-blue); }
 
-/* Stok Rozetleri */
-.stock-badge {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    font-size: 0.7rem;
-    padding: 2px 8px;
-    border-radius: 4px;
-    color: white;
-    font-weight: bold;
-    z-index: 5;
-}
+.stock-badge { position: absolute; top: 10px; left: 10px; font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; color: white; font-weight: bold; z-index: 5; }
 .stock-ok { background-color: var(--success); }
 .stock-low { background-color: var(--warning); }
 .stock-out { background-color: var(--danger); }
 
-/* İndirim Rozeti */
 .discount-badge {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background-color: var(--marine-accent);
-    color: white;
-    font-weight: bold;
-    font-size: 0.8rem;
-    padding: 4px 8px;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 5;
-    transform: rotate(15deg);
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    position: absolute; top: 10px; right: 10px; background-color: var(--marine-accent); color: white;
+    font-weight: bold; font-size: 0.8rem; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+    border-radius: 50%; z-index: 5; transform: rotate(15deg); box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
+.old-price { text-decoration: line-through; color: #9CA3AF; font-size: 0.9rem; margin-right: 5px; }
 
-/* Eski Fiyat (Üstü Çizili) */
-.old-price {
-    text-decoration: line-through;
-    color: #9CA3AF;
-    font-size: 0.9rem;
-    margin-right: 5px;
+/* --- DOSYA YÜKLEME --- */
+.file-upload-wrapper {
+    position: relative; border: 2px dashed #4B5563; border-radius: 8px; padding: 20px; text-align: center; cursor: pointer; transition: 0.3s;
 }
+.file-upload-wrapper:hover { border-color: var(--marine-accent); background-color: rgba(255,255,255,0.05); }
+.file-upload-wrapper input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 
-/* --- ADMIN PANELİ --- */
-.admin-tab-btn {
-    padding: 10px 20px;
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    transition: all 0.2s;
-    color: rgba(255,255,255,0.6);
+/* --- CHAT WIDGET --- */
+.chat-widget { position: fixed; bottom: 20px; right: 20px; z-index: 90; display: flex; flex-direction: column; align-items: flex-end; }
+.chat-btn {
+    width: 60px; height: 60px; background-color: var(--marine-accent); border-radius: 50%; color: white;
+    display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    cursor: pointer; transition: transform 0.3s;
 }
-.admin-tab-btn.active {
-    border-bottom-color: var(--marine-accent);
-    color: white;
-    font-weight: bold;
-}
-.admin-tab-content { display: none; }
-.admin-tab-content.active { display: block; }
+.chat-btn:hover { transform: scale(1.1); }
 
-/* --- MARKA SLIDER --- */
-.brand-marquee {
-    background: white;
-    padding: 20px 0;
-    overflow: hidden;
-    position: relative;
-    border-top: 1px solid #e5e7eb;
+.chat-box {
+    width: 300px; height: 400px; background: white; border-radius: 10px; box-shadow: 0 5px 25px rgba(0,0,0,0.2);
+    margin-bottom: 15px; display: none; flex-direction: column; overflow: hidden; border: 1px solid #e5e7eb;
 }
+.chat-box.open { display: flex; }
+.chat-header { background: var(--marine-dark); color: white; padding: 10px 15px; font-weight: bold; display: flex; justify-content: space-between; }
+.chat-body { flex-grow: 1; padding: 10px; overflow-y: auto; background-color: #f9f9f9; display: flex; flex-direction: column; gap: 8px; }
+.chat-footer { padding: 10px; border-top: 1px solid #eee; display: flex; gap: 5px; background: white; }
+
+.msg { padding: 8px 12px; border-radius: 10px; max-width: 80%; font-size: 0.9rem; line-height: 1.4; word-wrap: break-word; }
+.msg.user { align-self: flex-end; background-color: var(--marine-blue); color: white; border-bottom-right-radius: 0; }
+.msg.admin { align-self: flex-start; background-color: #e5e7eb; color: #333; border-bottom-left-radius: 0; }
+.msg-time { font-size: 0.65rem; opacity: 0.7; display: block; text-align: right; margin-top: 2px; }
+
+/* ADMIN CHAT */
+.admin-msg-item { padding: 10px; border-bottom: 1px solid #444; cursor: pointer; }
+.admin-msg-item:hover { background-color: #374151; }
+
+/* MARKA SLIDER */
+.brand-marquee { background: white; padding: 20px 0; overflow: hidden; position: relative; border-top: 1px solid #e5e7eb; }
 .marquee-content { display: flex; animation: marquee 30s linear infinite; width: max-content; }
 .brand-item { width: 150px; padding: 0 20px; display: flex; align-items: center; justify-content: center; }
 .brand-item img { max-width: 100%; max-height: 50px; filter: grayscale(100%); opacity: 0.6; transition: 0.3s; }
 .brand-item img:hover { filter: grayscale(0%); opacity: 1; }
 @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
-/* YARDIMCILAR */
 .hide { display: none !important; }
