@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MarinEkipman - Dinamik E-Ticaret</title>
+    <title>MarinEkipman - Profesyonel Denizcilik</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet"/>
-
+    <link rel="stylesheet" href="style.css">
+    
     <script>
         tailwind.config = {
             theme: {
@@ -17,650 +17,125 @@
                         'marine-dark': '#002B49',
                         'marine-blue': '#005F88',
                         'marine-accent': '#FF6B00',
-                        'marine-light': '#F0F4F8'
                     }
                 }
             }
         }
     </script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
-        body { font-family: 'Montserrat', sans-serif; }
-        .hide { display: none !important; }
-        /* Admin Sidebar Stili */
-        .admin-link.active { background-color: #005F88; border-right: 4px solid #FF6B00; }
-    </style>
 </head>
-<body class="bg-gray-50 h-screen flex flex-col">
+<body>
 
-    <div id="client-app" class="flex-grow flex flex-col">
-        
-        <header class="bg-marine-dark text-white shadow-lg sticky top-0 z-50">
-            <div class="container mx-auto px-4 py-3">
-                <div class="flex justify-between items-center">
-                    <nav class="hidden md:flex space-x-6 text-sm">
-                        <a href="javascript:void(0)" onclick="router('home')" class="hover:text-marine-accent">ANA SAYFA</a>
-                        <a href="javascript:void(0)" onclick="router('products')" class="hover:text-marine-accent">TÜM ÜRÜNLER</a>
+    <header class="relative mb-20"> <div class="header-top text-white">
+            <div class="container mx-auto px-4 py-4">
+                <div class="flex justify-between items-center text-sm border-b border-gray-700 pb-2 mb-4">
+                    <div class="flex items-center gap-2">
+                        <span>Para Birimi:</span>
+                        <select id="currency-selector" onchange="changeCurrency(this.value)" class="bg-marine-blue text-white border-none rounded px-2 py-1 text-xs cursor-pointer focus:outline-none">
+                            <option value="TRY">TRY (₺)</option>
+                            <option value="USD">USD ($)</option>
+                            <option value="EUR">EUR (€)</option>
+                        </select>
+                        <span id="exchange-rates-info" class="text-xs text-gray-400 ml-2 italic">Kur Yükleniyor...</span>
+                    </div>
+                    <div class="flex gap-4">
+                        <a href="#" onclick="toggleAdminPanel()" class="hover:text-marine-accent"><i class="fa-solid fa-lock"></i> Yönetici</a>
+                        <a href="#" class="hover:text-marine-accent">Yardım</a>
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center h-12">
+                    <nav class="hidden md:flex space-x-8 font-semibold w-1/3">
+                        <a href="javascript:void(0)" onclick="router('home')" class="hover:text-marine-accent transition">ANA SAYFA</a>
+                        <a href="javascript:void(0)" onclick="router('products')" class="hover:text-marine-accent transition">MAĞAZA</a>
                     </nav>
 
-                    <div class="cursor-pointer text-center" onclick="router('home')">
-                        <img id="site-logo-img" src="" alt="Logo" class="h-12 mx-auto hide">
-                        <h1 id="site-logo-text" class="text-2xl font-bold tracking-widest">
-                            <i class="fa-solid fa-anchor text-marine-accent"></i> Marin<span class="text-blue-300">Ekipman</span>
-                        </h1>
-                    </div>
+                    <div class="w-1/3"></div>
 
-                    <div class="flex items-center gap-4">
-                        <button onclick="toggleAdminPanel()" class="text-xs bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded">Yönetici</button>
-                        <div class="relative cursor-pointer" onclick="router('cart')">
+                    <nav class="flex space-x-6 justify-end items-center w-1/3">
+                        <div class="relative cursor-pointer hover:text-marine-accent" onclick="router('cart')">
                             <i class="fa-solid fa-cart-shopping text-xl"></i>
-                            <span id="cart-count" class="absolute -top-2 -right-2 bg-marine-accent text-xs rounded-full h-5 w-5 flex items-center justify-center">0</span>
+                            <span id="cart-count" class="absolute -top-2 -right-2 bg-marine-accent text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">0</span>
                         </div>
-                    </div>
+                    </nav>
                 </div>
             </div>
-        </header>
+        </div>
+        
+        <div class="header-curve"></div>
 
-        <main id="main-content" class="flex-grow">
-            
-            <div id="page-home">
-                <div id="home-slider" class="relative w-full h-[400px] md:h-[500px] overflow-hidden group">
-                    </div>
+        <div class="logo-wrapper cursor-pointer" onclick="router('home')">
+            <img src="logo.png" alt="MarinEkipman" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+            <h1 class="text-marine-dark font-bold text-center leading-tight hidden text-sm">MARIN<br><span class="text-marine-accent">EKIPMAN</span></h1>
+        </div>
+    </header>
 
-                <section class="container mx-auto py-10 px-4">
-                    <h2 class="text-2xl font-bold text-marine-dark mb-6 text-center">Kategoriler</h2>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="home-categories">
-                        </div>
-                </section>
-
-                <section class="container mx-auto py-8 px-4 bg-white rounded shadow-sm mb-8">
-                    <div class="flex justify-between items-end mb-6">
-                        <h2 class="text-2xl font-bold text-marine-dark">Popüler Ürünler</h2>
-                        <a href="javascript:void(0)" onclick="router('products')" class="text-marine-blue hover:underline">Tümünü Gör</a>
-                    </div>
-                    <div id="featured-products" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        </div>
-                </section>
-            </div>
-
-            <div id="page-products" class="hide container mx-auto py-8 px-4">
-                <div class="flex flex-col md:flex-row gap-8">
-                    <aside class="w-full md:w-1/4 bg-white p-5 rounded border h-fit">
-                        <h3 class="font-bold text-lg mb-4 text-marine-dark">Filtrele</h3>
-                        <div class="mb-4">
-                            <label class="block text-sm font-semibold mb-2">Kategori</label>
-                            <select id="filter-category" class="w-full border p-2 rounded" onchange="applyFilters()">
-                                <option value="all">Tümü</option>
-                                </select>
-                        </div>
-                        <div class="mb-4">
-                            <label class="block text-sm font-semibold mb-2">Marka Ara</label>
-                            <input type="text" id="filter-brand" placeholder="Örn: Garmin" class="w-full border p-2 rounded" onkeyup="applyFilters()">
-                        </div>
-                        <button onclick="applyFilters()" class="w-full bg-marine-blue text-white py-2 rounded">Uygula</button>
-                    </aside>
-                    <div class="w-full md:w-3/4">
-                        <h2 class="text-2xl font-bold mb-4">Ürünler</h2>
-                        <div id="all-products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="page-detail" class="hide container mx-auto py-12 px-4">
-                <button onclick="router('products')" class="mb-4 text-gray-500 hover:text-marine-dark"><i class="fa-solid fa-arrow-left"></i> Geri Dön</button>
-                <div class="bg-white p-6 rounded shadow-lg flex flex-col md:flex-row gap-8">
-                    <div class="w-full md:w-1/2">
-                        <img id="detail-img" src="" class="w-full h-96 object-contain border rounded bg-gray-50">
-                    </div>
-                    <div class="w-full md:w-1/2 flex flex-col justify-center">
-                        <span id="detail-brand" class="text-marine-blue font-semibold uppercase tracking-wide"></span>
-                        <h1 id="detail-name" class="text-3xl font-bold text-marine-dark mb-4"></h1>
-                        <p id="detail-desc" class="text-gray-600 mb-6 leading-relaxed"></p>
-                        <div class="flex items-center gap-4 mb-8">
-                            <span id="detail-price" class="text-3xl font-bold text-marine-accent"></span>
-                        </div>
-                        <button id="detail-add-btn" class="bg-marine-dark text-white py-4 px-8 rounded hover:bg-marine-blue transition text-lg w-full md:w-auto">
-                            <i class="fa-solid fa-cart-plus mr-2"></i> Sepete Ekle
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div id="page-cart" class="hide container mx-auto py-12 px-4">
-                <h2 class="text-2xl font-bold mb-6">Alışveriş Sepetiniz</h2>
-                <div id="cart-items" class="bg-white p-6 rounded shadow mb-6">
-                    <p class="text-gray-500">Sepetiniz boş.</p>
-                </div>
-                <div id="cart-summary" class="bg-gray-100 p-6 rounded flex justify-end items-center gap-6 hide">
-                    <div class="text-xl">Toplam: <span id="cart-total" class="font-bold text-marine-accent">0 TL</span></div>
-                    <button onclick="router('checkout')" class="bg-green-600 text-white px-6 py-3 rounded font-bold hover:bg-green-700">Ödemeye Geç</button>
-                </div>
-            </div>
-
-            <div id="page-checkout" class="hide container mx-auto py-12 px-4 max-w-2xl">
-                <div class="bg-white p-8 rounded shadow-lg border-t-4 border-marine-accent">
-                    <h2 class="text-2xl font-bold text-center mb-6">Sipariş Tamamlama</h2>
-                    <form onsubmit="event.preventDefault(); completeOrder();">
-                        <div class="grid grid-cols-2 gap-4 mb-4">
-                            <input type="text" placeholder="Ad" class="border p-3 rounded w-full" required>
-                            <input type="text" placeholder="Soyad" class="border p-3 rounded w-full" required>
-                        </div>
-                        <input type="text" placeholder="Adres" class="border p-3 rounded w-full mb-4" required>
-                        <input type="text" placeholder="Kart Numarası (Simülasyon)" class="border p-3 rounded w-full mb-6" required>
-                        <button type="submit" class="w-full bg-marine-accent text-white py-4 rounded font-bold hover:bg-orange-600 text-lg">Siparişi Onayla</button>
-                    </form>
-                </div>
-            </div>
-
+    <main id="main-content" class="flex-grow container mx-auto px-4">
         </main>
 
-        <footer class="bg-marine-dark text-white py-8 text-center mt-auto">
-            <p>&copy; 2025 MarinEkipman. Tüm hakları saklıdır.</p>
-        </footer>
-    </div>
+    <footer class="bg-marine-dark text-white mt-12 pt-12 pb-6 border-t-4 border-marine-accent">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <h4 class="text-lg font-bold mb-4 text-marine-accent">MarinEkipman</h4>
+                    <p class="text-sm text-gray-300 leading-relaxed">
+                        Denizcilik sektöründe 20 yılı aşkın tecrübemizle, tekne malzemeleri ve elektronik ekipmanlarda güvenilir çözüm ortağınız.
+                    </p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-4">Hızlı Erişim</h4>
+                    <ul class="space-y-2 text-sm text-gray-300">
+                        <li><a href="#" onclick="router('products')" class="hover:text-marine-accent">Tüm Ürünler</a></li>
+                        <li><a href="#" class="hover:text-marine-accent">Elektronik</a></li>
+                        <li><a href="#" class="hover:text-marine-accent">Güvenlik Ekipmanları</a></li>
+                        <li><a href="#" class="hover:text-marine-accent">İndirimli Ürünler</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-4">Müşteri Hizmetleri</h4>
+                    <ul class="space-y-2 text-sm text-gray-300">
+                        <li><a href="#" class="hover:text-marine-accent">Sipariş Takibi</a></li>
+                        <li><a href="#" class="hover:text-marine-accent">İade ve Değişim</a></li>
+                        <li><a href="#" class="hover:text-marine-accent">Gizlilik Politikası</a></li>
+                        <li><a href="#" class="hover:text-marine-accent">İletişim</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-4">Bize Ulaşın</h4>
+                    <div class="text-sm text-gray-300 space-y-2">
+                        <p><i class="fa-solid fa-location-dot mr-2"></i> İstanbul / Türkiye</p>
+                        <p><i class="fa-solid fa-phone mr-2"></i> +90 212 000 00 00</p>
+                        <p><i class="fa-solid fa-envelope mr-2"></i> info@marinekipman.com</p>
+                    </div>
+                    <div class="mt-4 flex space-x-3">
+                        <a href="#" class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center hover:bg-marine-accent"><i class="fa-brands fa-facebook-f"></i></a>
+                        <a href="#" class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center hover:bg-marine-accent"><i class="fa-brands fa-instagram"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 pt-6 text-center text-sm text-gray-400">
+                <p>&copy; 2025 MarinEkipman. Tüm hakları saklıdır. Kredi kartı bilgileriniz 256bit SSL ile korunmaktadır.</p>
+                <div class="flex justify-center gap-2 mt-2 text-2xl">
+                    <i class="fa-brands fa-cc-visa"></i>
+                    <i class="fa-brands fa-cc-mastercard"></i>
+                </div>
+            </div>
+        </div>
+    </footer>
 
     <div id="admin-app" class="fixed inset-0 bg-gray-100 z-[100] flex hide">
-        
-        <aside class="w-64 bg-marine-dark text-white flex flex-col">
-            <div class="p-6 font-bold text-xl border-b border-gray-700">Yönetim Paneli</div>
+        <aside class="w-64 bg-marine-dark text-white flex flex-col shadow-2xl">
+            <div class="p-6 font-bold text-xl border-b border-gray-600">Yönetim Paneli</div>
             <nav class="flex-grow py-4">
-                <a href="javascript:void(0)" onclick="adminRouter('dashboard')" id="link-dashboard" class="admin-link block px-6 py-3 hover:bg-gray-700">Panel Özeti</a>
-                <a href="javascript:void(0)" onclick="adminRouter('products')" id="link-products" class="admin-link block px-6 py-3 hover:bg-gray-700">Ürün Yönetimi</a>
-                <a href="javascript:void(0)" onclick="adminRouter('slider')" id="link-slider" class="admin-link block px-6 py-3 hover:bg-gray-700">Slider Ayarları</a>
-                <a href="javascript:void(0)" onclick="adminRouter('settings')" id="link-settings" class="admin-link block px-6 py-3 hover:bg-gray-700">Genel Ayarlar</a>
+                <a href="#" onclick="adminRouter('products')" class="admin-link block px-6 py-3 hover:bg-gray-700">Ürünler & Fiyat</a>
+                <a href="#" onclick="adminRouter('slider')" class="admin-link block px-6 py-3 hover:bg-gray-700">Slider Yönetimi</a>
             </nav>
-            <button onclick="toggleAdminPanel()" class="p-4 bg-red-600 hover:bg-red-700 text-center">Çıkış Yap / Siteye Dön</button>
+            <button onclick="toggleAdminPanel()" class="p-4 bg-red-600 hover:bg-red-700">Çıkış</button>
         </aside>
-
-        <main class="flex-grow p-8 overflow-y-auto">
-            
-            <div id="admin-dashboard">
-                <h2 class="text-3xl font-bold mb-6 text-gray-800">Hoşgeldiniz</h2>
-                <div class="grid grid-cols-3 gap-6">
-                    <div class="bg-white p-6 rounded shadow border-l-4 border-blue-500">
-                        <h3 class="text-gray-500">Toplam Ürün</h3>
-                        <p class="text-3xl font-bold" id="adm-total-products">0</p>
-                    </div>
-                    <div class="bg-white p-6 rounded shadow border-l-4 border-orange-500">
-                        <h3 class="text-gray-500">Aktif Slider</h3>
-                        <p class="text-3xl font-bold" id="adm-total-slides">0</p>
-                    </div>
-                </div>
-            </div>
-
-            <div id="admin-products" class="hide">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold">Ürün Listesi</h2>
-                    <button onclick="showProductForm()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">+ Yeni Ürün Ekle</button>
-                </div>
-
-                <div id="product-form-container" class="bg-white p-6 rounded shadow mb-6 hide border border-gray-300">
-                    <h3 class="font-bold mb-4 text-lg">Ürün Detayları</h3>
-                    <input type="hidden" id="edit-product-id">
-                    <div class="grid grid-cols-2 gap-4 mb-4">
-                        <input type="text" id="prod-name" placeholder="Ürün Adı" class="border p-2 rounded w-full">
-                        <input type="text" id="prod-brand" placeholder="Marka (Garmin, Lalizas vb.)" class="border p-2 rounded w-full">
-                    </div>
-                    <div class="grid grid-cols-2 gap-4 mb-4">
-                        <select id="prod-cat" class="border p-2 rounded w-full">
-                            <option value="elektronik">Elektronik</option>
-                            <option value="guvenlik">Güvenlik</option>
-                            <option value="aksesuar">Aksesuar</option>
-                            <option value="giyim">Giyim</option>
-                        </select>
-                        <input type="number" id="prod-price" placeholder="Fiyat (TL)" class="border p-2 rounded w-full">
-                    </div>
-                    <input type="text" id="prod-img" placeholder="Resim URL (Örn: https://...)" class="border p-2 rounded w-full mb-4">
-                    <textarea id="prod-desc" placeholder="Ürün Açıklaması" class="border p-2 rounded w-full mb-4 h-24"></textarea>
-                    <div class="flex gap-2">
-                        <button onclick="saveProduct()" class="bg-marine-blue text-white px-6 py-2 rounded">Kaydet</button>
-                        <button onclick="hideProductForm()" class="bg-gray-400 text-white px-6 py-2 rounded">İptal</button>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded shadow overflow-hidden">
-                    <table class="w-full text-left border-collapse">
-                        <thead class="bg-gray-200">
-                            <tr>
-                                <th class="p-3">Resim</th>
-                                <th class="p-3">Ad</th>
-                                <th class="p-3">Marka</th>
-                                <th class="p-3">Fiyat</th>
-                                <th class="p-3 text-right">İşlem</th>
-                            </tr>
-                        </thead>
-                        <tbody id="admin-product-table">
-                            </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div id="admin-slider" class="hide">
-                <h2 class="text-2xl font-bold mb-6">Slider Görselleri</h2>
-                <div class="bg-white p-6 rounded shadow mb-6">
-                    <h3 class="font-bold mb-2">Yeni Slide Ekle</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <input type="text" id="slide-title" placeholder="Başlık (Örn: İndirim!)" class="border p-2 rounded">
-                        <input type="text" id="slide-img" placeholder="Görsel URL" class="border p-2 rounded">
-                        <input type="text" id="slide-link" placeholder="Yönlenecek Sayfa ID (products, contact)" class="border p-2 rounded">
-                        <button onclick="addSlide()" class="bg-marine-blue text-white px-4 py-2 rounded">Ekle</button>
-                    </div>
-                </div>
-                <div id="admin-slide-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    </div>
-            </div>
-
-            <div id="admin-settings" class="hide">
-                <h2 class="text-2xl font-bold mb-6">Genel Ayarlar</h2>
-                <div class="bg-white p-6 rounded shadow max-w-lg">
-                    <label class="block font-bold mb-2">Site Logosu (URL)</label>
-                    <input type="text" id="setting-logo-url" class="border p-2 rounded w-full mb-4" placeholder="Logo Resim Adresi">
-                    <p class="text-xs text-gray-500 mb-4">Logo URL'si girilirse metin logo yerine bu görsel kullanılır.</p>
-                    
-                    <button onclick="saveSettings()" class="bg-green-600 text-white px-6 py-2 rounded">Ayarları Kaydet</button>
-                </div>
-            </div>
-
-        </main>
+        <main id="admin-content" class="flex-grow p-8 overflow-y-auto">
+            </main>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-
-    <script>
-        // --- VERİTABANI SİMÜLASYONU (Local Storage) ---
-        const defaultData = {
-            products: [
-                { id: 1, name: "GPSMAP 1223xsv", brand: "Garmin", category: "elektronik", price: 24500, img: "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=500", desc: "Harika bir chartplotter." },
-                { id: 2, name: "150N Can Yeleği", brand: "Lalizas", category: "guvenlik", price: 1200, img: "https://images.unsplash.com/photo-1616769911429-1a986eb0712d?w=500", desc: "Otomatik şişme can yeleği." },
-                { id: 3, name: "Tekne Usturmaça", brand: "Polyform", category: "aksesuar", price: 1500, img: "https://images.unsplash.com/photo-1596422846543-75c6fc197f07?w=500", desc: "F2 model usturmaça." }
-            ],
-            slides: [
-                { id: 1, title: "Yeni Sezon Ekipmanlar", img: "https://images.unsplash.com/photo-1566403487332-95b77c5e2366?w=1600", link: "products" },
-                { id: 2, title: "Güvenlik Her Şeydir", img: "https://images.unsplash.com/photo-1544280145-9856a9089851?w=1600", link: "products" }
-            ],
-            settings: {
-                logoUrl: ""
-            },
-            cart: []
-        };
-
-        // Veriyi Yükle veya Başlat
-        let db = JSON.parse(localStorage.getItem('marinDB')) || defaultData;
-
-        function saveDB() {
-            localStorage.setItem('marinDB', JSON.stringify(db));
-            renderClient(); // Veri değişince siteyi yenile
-            updateAdminDashboard(); // Admini yenile
-        }
-
-        // --- MÜŞTERİ TARAFI FONKSİYONLARI ---
-
-        function renderClient() {
-            // Logo
-            if(db.settings.logoUrl) {
-                document.getElementById('site-logo-img').src = db.settings.logoUrl;
-                document.getElementById('site-logo-img').classList.remove('hide');
-                document.getElementById('site-logo-text').classList.add('hide');
-            } else {
-                document.getElementById('site-logo-img').classList.add('hide');
-                document.getElementById('site-logo-text').classList.remove('hide');
-            }
-
-            // Slider
-            const sliderContainer = document.getElementById('home-slider');
-            sliderContainer.innerHTML = '';
-            db.slides.forEach((slide, index) => {
-                const isActive = index === 0 ? 'opacity-100' : 'opacity-0'; // Basitlik için sadece ilkini gösteriyoruz JS ile döndürülebilir
-                // Not: Tam slider animasyonu için ekstra JS gerekir, burada basit gösterim yapıyoruz.
-                // Basit bir slider yapısı yerine hepsi üst üste, CSS animation ile döngü yapılabilir veya JS ile.
-                // Burada en son eklenen slide'ı static gösterelim karmaşıklığı azaltmak için, ya da basit buton ekleyelim.
-                
-                // Basitlik adına: Sadece ilk slide'ı gösterelim veya rastgele.
-                // Daha gelişmiş: Tek bir div içine koyup değiştirelim.
-            });
-            
-            // Slider (Basit Versiyon: Sadece ilk görseli yükle, butonla geçiş yap)
-            if(db.slides.length > 0) {
-                renderActiveSlide(0);
-            }
-
-            // Popüler Ürünler (İlk 4)
-            const featContainer = document.getElementById('featured-products');
-            featContainer.innerHTML = db.products.slice(0, 4).map(p => productCard(p)).join('');
-
-            // Kategoriler (Sabit liste veya ürünlerden türetilebilir)
-            document.getElementById('home-categories').innerHTML = `
-                <div onclick="router('products')" class="bg-white p-4 text-center border rounded cursor-pointer hover:shadow-lg"><i class="fa-solid fa-microchip text-3xl text-marine-blue mb-2"></i><br>Elektronik</div>
-                <div onclick="router('products')" class="bg-white p-4 text-center border rounded cursor-pointer hover:shadow-lg"><i class="fa-solid fa-life-ring text-3xl text-marine-blue mb-2"></i><br>Güvenlik</div>
-                <div onclick="router('products')" class="bg-white p-4 text-center border rounded cursor-pointer hover:shadow-lg"><i class="fa-solid fa-anchor text-3xl text-marine-blue mb-2"></i><br>Aksesuar</div>
-                <div onclick="router('products')" class="bg-white p-4 text-center border rounded cursor-pointer hover:shadow-lg"><i class="fa-solid fa-shirt text-3xl text-marine-blue mb-2"></i><br>Giyim</div>
-            `;
-
-            // Sepet Sayısı
-            document.getElementById('cart-count').innerText = db.cart.length;
-        }
-
-        let currentSlideIndex = 0;
-        function renderActiveSlide(index) {
-            const s = db.slides[index];
-            const html = `
-                <img src="${s.img}" class="w-full h-full object-cover brightness-75 absolute top-0 left-0" alt="${s.title}">
-                <div class="absolute inset-0 flex flex-col justify-center items-center text-center text-white z-10">
-                    <h2 class="text-4xl font-bold mb-4 shadow-black drop-shadow-md">${s.title}</h2>
-                    <button onclick="router('${s.link}')" class="px-6 py-2 bg-marine-accent rounded hover:bg-orange-600 transition">İncele</button>
-                </div>
-                <button onclick="changeSlide(-1)" class="absolute left-4 top-1/2 bg-black/50 text-white p-3 rounded-full z-20"><i class="fa-solid fa-chevron-left"></i></button>
-                <button onclick="changeSlide(1)" class="absolute right-4 top-1/2 bg-black/50 text-white p-3 rounded-full z-20"><i class="fa-solid fa-chevron-right"></i></button>
-            `;
-            document.getElementById('home-slider').innerHTML = html;
-        }
-
-        function changeSlide(dir) {
-            if(db.slides.length === 0) return;
-            currentSlideIndex += dir;
-            if(currentSlideIndex >= db.slides.length) currentSlideIndex = 0;
-            if(currentSlideIndex < 0) currentSlideIndex = db.slides.length - 1;
-            renderActiveSlide(currentSlideIndex);
-        }
-
-        function productCard(p) {
-            return `
-                <div class="bg-white border rounded overflow-hidden hover:shadow-xl transition group flex flex-col">
-                    <div class="h-48 overflow-hidden relative cursor-pointer" onclick="showDetail(${p.id})">
-                        <img src="${p.img}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
-                    </div>
-                    <div class="p-4 flex-grow flex flex-col">
-                        <div class="text-xs text-gray-500 uppercase">${p.brand}</div>
-                        <h3 class="font-bold text-marine-dark cursor-pointer hover:text-marine-accent" onclick="showDetail(${p.id})">${p.name}</h3>
-                        <div class="mt-auto flex justify-between items-center pt-3">
-                            <span class="font-bold text-lg">${p.price} TL</span>
-                            <button onclick="addToCart(${p.id})" class="text-marine-accent hover:text-marine-dark text-xl"><i class="fa-solid fa-cart-plus"></i></button>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        // Router (Sayfa Geçişleri)
-        function router(pageId) {
-            // Tüm sayfaları gizle
-            document.querySelectorAll('#main-content > div').forEach(el => el.classList.add('hide'));
-            
-            // İstenen sayfayı göster
-            const target = document.getElementById('page-' + pageId);
-            if(target) target.classList.remove('hide');
-            else document.getElementById('page-home').classList.remove('hide'); // Varsayılan home
-
-            window.scrollTo(0,0);
-
-            if(pageId === 'products') applyFilters();
-            if(pageId === 'cart') renderCartPage();
-        }
-
-        // Filtreleme
-        function applyFilters() {
-            const cat = document.getElementById('filter-category').value;
-            const brand = document.getElementById('filter-brand').value.toLowerCase();
-            
-            const filtered = db.products.filter(p => {
-                return (cat === 'all' || p.category === cat) &&
-                       (p.brand.toLowerCase().includes(brand) || p.name.toLowerCase().includes(brand));
-            });
-
-            const grid = document.getElementById('all-products-grid');
-            if(filtered.length === 0) grid.innerHTML = "<p>Ürün bulunamadı.</p>";
-            else grid.innerHTML = filtered.map(p => productCard(p)).join('');
-        }
-
-        // Detay Sayfası
-        function showDetail(id) {
-            const p = db.products.find(x => x.id == id);
-            if(!p) return;
-            
-            document.getElementById('detail-img').src = p.img;
-            document.getElementById('detail-brand').innerText = p.brand;
-            document.getElementById('detail-name').innerText = p.name;
-            document.getElementById('detail-desc').innerText = p.desc || "Açıklama girilmemiş.";
-            document.getElementById('detail-price').innerText = p.price + " TL";
-            
-            // Butona onclick eventini güncelle
-            const btn = document.getElementById('detail-add-btn');
-            btn.onclick = function() { addToCart(p.id); };
-
-            router('detail');
-        }
-
-        // Sepet İşlemleri
-        function addToCart(id) {
-            const p = db.products.find(x => x.id == id);
-            db.cart.push(p);
-            saveDB();
-            toastr.success(p.name + ' sepete eklendi!');
-            document.getElementById('cart-count').innerText = db.cart.length;
-        }
-
-        function renderCartPage() {
-            const container = document.getElementById('cart-items');
-            if(db.cart.length === 0) {
-                container.innerHTML = "<p class='text-center text-gray-500'>Sepetiniz boş.</p>";
-                document.getElementById('cart-summary').classList.add('hide');
-                return;
-            }
-
-            let total = 0;
-            let html = '<ul class="divide-y">';
-            db.cart.forEach((item, idx) => {
-                total += parseFloat(item.price);
-                html += `
-                    <li class="py-4 flex justify-between items-center">
-                        <div class="flex items-center gap-4">
-                            <img src="${item.img}" class="w-16 h-16 object-cover rounded">
-                            <div>
-                                <h4 class="font-bold">${item.name}</h4>
-                                <p class="text-sm text-gray-500">${item.brand}</p>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-4">
-                            <span class="font-bold">${item.price} TL</span>
-                            <button onclick="removeFromCart(${idx})" class="text-red-500"><i class="fa-solid fa-trash"></i></button>
-                        </div>
-                    </li>
-                `;
-            });
-            html += '</ul>';
-            container.innerHTML = html;
-            
-            document.getElementById('cart-total').innerText = total + " TL";
-            document.getElementById('cart-summary').classList.remove('hide');
-        }
-
-        function removeFromCart(idx) {
-            db.cart.splice(idx, 1);
-            saveDB();
-            renderCartPage();
-            document.getElementById('cart-count').innerText = db.cart.length;
-        }
-
-        function completeOrder() {
-            alert("Siparişiniz başarıyla alındı! (Simülasyon)");
-            db.cart = [];
-            saveDB();
-            router('home');
-        }
-
-
-        // --- ADMİN TARAFI FONKSİYONLARI ---
-
-        function toggleAdminPanel() {
-            const panel = document.getElementById('admin-app');
-            if(panel.classList.contains('hide')) {
-                // Şifre kontrolü (Basit)
-                const pass = prompt("Yönetici şifresi giriniz: (Varsayılan: admin)");
-                if(pass === "admin") {
-                    panel.classList.remove('hide');
-                    updateAdminDashboard();
-                    adminRouter('dashboard');
-                } else {
-                    alert("Hatalı şifre!");
-                }
-            } else {
-                panel.classList.add('hide');
-                renderClient(); // Admin'den çıkarken siteyi yenile
-            }
-        }
-
-        function adminRouter(page) {
-            // Link stil
-            document.querySelectorAll('.admin-link').forEach(l => l.classList.remove('active'));
-            document.getElementById('link-' + page).classList.add('active');
-
-            // İçerik göster/gizle
-            document.getElementById('admin-dashboard').classList.add('hide');
-            document.getElementById('admin-products').classList.add('hide');
-            document.getElementById('admin-slider').classList.add('hide');
-            document.getElementById('admin-settings').classList.add('hide');
-
-            document.getElementById('admin-' + page).classList.remove('hide');
-
-            if(page === 'products') renderAdminProductTable();
-            if(page === 'slider') renderAdminSliderList();
-            if(page === 'settings') {
-                document.getElementById('setting-logo-url').value = db.settings.logoUrl;
-            }
-        }
-
-        function updateAdminDashboard() {
-            document.getElementById('adm-total-products').innerText = db.products.length;
-            document.getElementById('adm-total-slides').innerText = db.slides.length;
-        }
-
-        // Admin Ürün İşlemleri
-        function renderAdminProductTable() {
-            const tbody = document.getElementById('admin-product-table');
-            tbody.innerHTML = db.products.map(p => `
-                <tr class="border-b">
-                    <td class="p-3"><img src="${p.img}" class="w-10 h-10 object-cover rounded"></td>
-                    <td class="p-3 font-semibold">${p.name}</td>
-                    <td class="p-3">${p.brand}</td>
-                    <td class="p-3">${p.price} TL</td>
-                    <td class="p-3 text-right">
-                        <button onclick="editProduct(${p.id})" class="text-blue-600 mr-2"><i class="fa-solid fa-pen"></i></button>
-                        <button onclick="deleteProduct(${p.id})" class="text-red-600"><i class="fa-solid fa-trash"></i></button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function showProductForm() {
-            document.getElementById('product-form-container').classList.remove('hide');
-            // Formu temizle
-            document.getElementById('edit-product-id').value = "";
-            document.getElementById('prod-name').value = "";
-            document.getElementById('prod-brand').value = "";
-            document.getElementById('prod-price').value = "";
-            document.getElementById('prod-img').value = "";
-            document.getElementById('prod-desc').value = "";
-        }
-        
-        function hideProductForm() {
-            document.getElementById('product-form-container').classList.add('hide');
-        }
-
-        function saveProduct() {
-            const id = document.getElementById('edit-product-id').value;
-            const name = document.getElementById('prod-name').value;
-            const brand = document.getElementById('prod-brand').value;
-            const category = document.getElementById('prod-cat').value;
-            const price = parseFloat(document.getElementById('prod-price').value);
-            const img = document.getElementById('prod-img').value || "https://placehold.co/300";
-            const desc = document.getElementById('prod-desc').value;
-
-            if(!name || !price) { alert("İsim ve fiyat zorunlu"); return; }
-
-            if(id) {
-                // Düzenleme
-                const idx = db.products.findIndex(x => x.id == id);
-                db.products[idx] = { id: parseInt(id), name, brand, category, price, img, desc };
-            } else {
-                // Yeni
-                const newId = db.products.length > 0 ? Math.max(...db.products.map(p => p.id)) + 1 : 1;
-                db.products.push({ id: newId, name, brand, category, price, img, desc });
-            }
-            saveDB();
-            hideProductForm();
-            renderAdminProductTable();
-            toastr.success('Ürün kaydedildi.');
-        }
-
-        function deleteProduct(id) {
-            if(confirm("Silmek istediğinize emin misiniz?")) {
-                db.products = db.products.filter(x => x.id != id);
-                saveDB();
-                renderAdminProductTable();
-            }
-        }
-
-        function editProduct(id) {
-            const p = db.products.find(x => x.id == id);
-            document.getElementById('edit-product-id').value = p.id;
-            document.getElementById('prod-name').value = p.name;
-            document.getElementById('prod-brand').value = p.brand;
-            document.getElementById('prod-cat').value = p.category;
-            document.getElementById('prod-price').value = p.price;
-            document.getElementById('prod-img').value = p.img;
-            document.getElementById('prod-desc').value = p.desc;
-            
-            document.getElementById('product-form-container').classList.remove('hide');
-        }
-
-        // Admin Slider İşlemleri
-        function addSlide() {
-            const title = document.getElementById('slide-title').value;
-            const img = document.getElementById('slide-img').value;
-            const link = document.getElementById('slide-link').value;
-            
-            if(img) {
-                db.slides.push({ id: Date.now(), title, img, link });
-                saveDB();
-                renderAdminSliderList();
-                document.getElementById('slide-title').value = "";
-                document.getElementById('slide-img').value = "";
-                document.getElementById('slide-link').value = "";
-            }
-        }
-
-        function renderAdminSliderList() {
-            const list = document.getElementById('admin-slide-list');
-            list.innerHTML = db.slides.map((s, idx) => `
-                <div class="relative group">
-                    <img src="${s.img}" class="w-full h-32 object-cover rounded shadow">
-                    <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
-                        <button onclick="deleteSlide(${idx})" class="text-white bg-red-600 px-3 py-1 rounded">Sil</button>
-                    </div>
-                    <div class="text-xs mt-1 text-gray-600 truncate">${s.title}</div>
-                </div>
-            `).join('');
-        }
-
-        function deleteSlide(idx) {
-            db.slides.splice(idx, 1);
-            saveDB();
-            renderAdminSliderList();
-        }
-
-        // Admin Ayarlar
-        function saveSettings() {
-            const url = document.getElementById('setting-logo-url').value;
-            db.settings.logoUrl = url;
-            saveDB();
-            toastr.success("Ayarlar güncellendi");
-        }
-
-
-        // Başlangıç
-        renderClient();
-
-    </script>
-</body>
+    <script src="main.js"></script> </body>
 </html>
