@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MarinEkipman - Deniz Malzemeleri</title>
+    <title>MarinEkipman - Profesyonel Denizcilik</title>
+    <!-- Kütüphaneler -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet"/>
@@ -25,80 +26,160 @@
 </head>
 <body>
 
-    <header class="relative mb-24">
+    <!-- HEADER ALANI -->
+    <header class="header-wrapper">
         <div class="header-top text-white">
             <div class="container mx-auto px-4 py-4">
-                <div class="flex justify-between items-center text-sm border-b border-gray-700 pb-2 mb-4">
-                    <div class="flex items-center gap-2">
-                        <span>Para Birimi:</span>
-                        <select id="currency-selector" onchange="changeCurrency(this.value)" class="bg-marine-blue text-white rounded px-2 py-1 text-xs cursor-pointer focus:outline-none">
-                            <option value="TRY">TRY (₺)</option>
-                            <option value="USD">USD ($)</option>
-                            <option value="EUR">EUR (€)</option>
+                
+                <!-- Üst Bilgi Barı: Kur & Giriş -->
+                <div class="flex flex-col md:flex-row justify-between items-center text-sm border-b border-white/20 pb-3 mb-4 gap-4">
+                    <!-- Kur Bilgisi -->
+                    <div class="flex items-center gap-3 bg-white/10 px-3 py-1 rounded-full">
+                        <i class="fa-solid fa-coins text-marine-accent"></i>
+                        <select id="currency-selector" onchange="changeCurrency(this.value)" class="bg-transparent text-white text-xs font-bold cursor-pointer focus:outline-none">
+                            <option value="TRY" class="text-black">TRY (₺)</option>
+                            <option value="USD" class="text-black">USD ($)</option>
+                            <option value="EUR" class="text-black">EUR (€)</option>
                         </select>
-                        <span id="exchange-rates-info" class="text-xs text-yellow-400 ml-2 font-mono tracking-tighter">TCMB Bağlanıyor...</span>
+                        <span id="exchange-rates-info" class="text-xs text-yellow-300 font-mono border-l border-white/30 pl-3">
+                            <i class="fa-solid fa-spinner fa-spin"></i> TCMB...
+                        </span>
                     </div>
-                    <div><a href="#" onclick="toggleAdminPanel()" class="hover:text-marine-accent"><i class="fa-solid fa-lock"></i> Yönetici</a></div>
+
+                    <!-- Sağ Linkler -->
+                    <div class="flex gap-4">
+                        <a href="javascript:void(0)" onclick="toggleAdminPanel()" class="hover:text-marine-accent transition"><i class="fa-solid fa-user-shield"></i> Yönetici</a>
+                        <a href="#" class="hover:text-marine-accent transition"><i class="fa-solid fa-circle-question"></i> Yardım</a>
+                    </div>
                 </div>
 
-                <div class="flex justify-between items-center h-12">
-                    <nav class="hidden md:flex space-x-8 font-semibold w-1/3">
-                        <a href="javascript:void(0)" onclick="router('home')" class="hover:text-marine-accent transition">ANA SAYFA</a>
-                        <a href="javascript:void(0)" onclick="router('products')" class="hover:text-marine-accent transition">ÜRÜNLER</a>
+                <!-- Ana Navigasyon & Arama -->
+                <div class="flex flex-col md:flex-row justify-between items-center h-auto md:h-16 gap-4">
+                    
+                    <!-- Sol Menü -->
+                    <nav class="flex space-x-6 font-bold text-sm tracking-wide w-full md:w-1/3 justify-center md:justify-start">
+                        <a href="javascript:void(0)" onclick="router('home')" class="hover:text-marine-accent transition py-2">ANA SAYFA</a>
+                        <a href="javascript:void(0)" onclick="router('products')" class="hover:text-marine-accent transition py-2">MAĞAZA</a>
                     </nav>
                     
-                    <div class="w-1/3"></div> <nav class="flex space-x-6 justify-end items-center w-1/3">
-                        <div class="relative cursor-pointer hover:text-marine-accent" onclick="router('cart')">
-                            <i class="fa-solid fa-cart-shopping text-2xl"></i>
-                            <span id="cart-count" class="absolute -top-2 -right-2 bg-marine-accent text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">0</span>
+                    <!-- Orta Boşluk (Logo Gelecek) -->
+                    <div class="w-full md:w-1/3 hidden md:block"></div>
+
+                    <!-- Sağ Alan: Arama & Sepet -->
+                    <div class="flex items-center justify-end w-full md:w-1/3 gap-4">
+                        <!-- Arama -->
+                        <div class="search-container relative hidden md:block w-full max-w-[200px]">
+                            <input type="text" id="header-search" placeholder="Ürün ara..." onkeyup="headerSearch(this.value)" class="w-full pl-3 pr-8 py-1 rounded-full text-sm border border-transparent focus:border-marine-accent focus:outline-none">
+                            <i class="fa-solid fa-magnifying-glass absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                            <!-- Arama Sonuçları Dropdown -->
+                            <div id="search-results" class="absolute top-full left-0 w-full bg-white text-black mt-2 rounded shadow-xl z-50 hidden max-h-60 overflow-y-auto"></div>
                         </div>
-                    </nav>
+
+                        <!-- Sepet -->
+                        <div class="relative cursor-pointer hover:text-marine-accent transition group" onclick="router('cart')">
+                            <div class="p-2 bg-white/10 rounded-full group-hover:bg-white group-hover:text-marine-dark transition">
+                                <i class="fa-solid fa-cart-shopping text-xl"></i>
+                            </div>
+                            <span id="cart-count" class="absolute -top-1 -right-1 bg-marine-accent text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center border-2 border-marine-dark">0</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
         
+        <!-- OVAL KIVRIM -->
         <div class="header-curve"></div>
 
-        <div class="logo-container cursor-pointer" onclick="router('home')">
-            <img src="logo.png" alt="MarinEkipman" onerror="this.style.display='none'; document.getElementById('alt-logo-text').classList.remove('hidden');">
-            <h1 id="alt-logo-text" class="text-marine-dark font-bold text-2xl hidden tracking-widest text-center">MARIN<span class="text-marine-accent">EKIPMAN</span></h1>
+        <!-- LOGO ALANI (Şeffaf & Büyük) -->
+        <div class="logo-area" onclick="router('home')">
+            <!-- Logo.png yoksa yazı görünür -->
+            <img src="logo.png" alt="MarinEkipman" onerror="this.style.display='none'; document.getElementById('backup-logo').classList.remove('hide');">
+            <!-- Yedek Metin Logo -->
+            <div id="backup-logo" class="hide text-center cursor-pointer">
+                <h1 class="text-3xl font-black text-marine-dark tracking-tighter drop-shadow-md">
+                    MARIN<span class="text-marine-accent">EKIPMAN</span>
+                </h1>
+                <span class="text-xs text-gray-500 font-bold tracking-widest">MARINE STORE</span>
+            </div>
         </div>
     </header>
 
-    <main id="main-content" class="flex-grow container mx-auto px-4 min-h-[600px]">
-        </main>
+    <!-- SAYFA İÇERİĞİ -->
+    <main id="main-content" class="flex-grow container mx-auto px-4 min-h-[500px] mb-12">
+        <!-- JS ile dinamik doldurulacak -->
+    </main>
 
-    <section class="mt-12">
-        <div class="brand-slider-area">
-            <div class="slider-track">
-                <div class="brand-slide"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Garmin_Logo.svg/2560px-Garmin_Logo.svg.png" alt="Garmin"></div>
-                <div class="brand-slide"><img src="https://seeklogo.com/images/R/Raymarine-logo-7B29B124E9-seeklogo.com.png" alt="Raymarine"></div>
-                <div class="brand-slide"><img src="https://upload.wikimedia.org/wikipedia/commons/2/23/Lowrance_Electronics_logo.png" alt="Lowrance"></div>
-                <div class="brand-slide"><img src="https://1000logos.net/wp-content/uploads/2021/05/Simrad-logo.png" alt="Simrad"></div>
-                <div class="brand-slide"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Garmin_Logo.svg/2560px-Garmin_Logo.svg.png" alt="Garmin"></div>
-                <div class="brand-slide"><img src="https://seeklogo.com/images/R/Raymarine-logo-7B29B124E9-seeklogo.com.png" alt="Raymarine"></div>
+    <!-- MARKA SLIDER (Infinite Marquee) -->
+    <section class="mt-auto">
+        <h3 class="text-center text-gray-400 text-sm font-bold uppercase tracking-widest mb-4">Çalıştığımız Markalar</h3>
+        <div class="brand-marquee">
+            <div class="marquee-content" id="brand-track">
+                <!-- JS ile logolar doldurulacak -->
             </div>
         </div>
     </section>
 
-    <footer class="bg-marine-dark text-white py-8 border-t-8 border-marine-accent">
-        <div class="container mx-auto px-4 text-center">
-            <p>&copy; 2025 MarinEkipman. Tüm hakları saklıdır.</p>
+    <!-- FOOTER -->
+    <footer class="bg-marine-dark text-white pt-16 pb-8 border-t-4 border-marine-accent">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+                <div>
+                    <h4 class="text-xl font-bold mb-4 text-marine-accent">MarinEkipman</h4>
+                    <p class="text-gray-400 text-sm leading-relaxed">
+                        Denizcilik sektörünün lider markalarını en uygun fiyatlarla ve güvenli alışveriş imkanıyla sunuyoruz.
+                    </p>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Hızlı Menü</h4>
+                    <ul class="text-sm text-gray-400 space-y-2">
+                        <li><a href="#" onclick="router('products')" class="hover:text-white">Tüm Ürünler</a></li>
+                        <li><a href="#" class="hover:text-white">İndirimdekiler</a></li>
+                        <li><a href="#" class="hover:text-white">Yeni Gelenler</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">İletişim</h4>
+                    <ul class="text-sm text-gray-400 space-y-2">
+                        <li><i class="fa-solid fa-phone mr-2"></i> +90 212 555 0000</li>
+                        <li><i class="fa-solid fa-envelope mr-2"></i> info@marinekipman.com</li>
+                        <li><i class="fa-brands fa-whatsapp mr-2"></i> +90 555 555 5555</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Bülten</h4>
+                    <div class="flex">
+                        <input type="text" placeholder="E-posta adresiniz" class="w-full px-3 py-2 text-black rounded-l-md focus:outline-none">
+                        <button class="bg-marine-accent px-4 py-2 rounded-r-md hover:bg-orange-600 font-bold">Kayıt</button>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-white/10 pt-8 text-center text-sm text-gray-500 flex flex-col md:flex-row justify-between items-center">
+                <p>&copy; 2025 MarinEkipman. Tüm hakları saklıdır.</p>
+                <div class="flex gap-4 text-2xl mt-4 md:mt-0 opacity-50">
+                    <i class="fa-brands fa-cc-visa"></i>
+                    <i class="fa-brands fa-cc-mastercard"></i>
+                    <i class="fa-brands fa-cc-amex"></i>
+                </div>
+            </div>
         </div>
     </footer>
 
+    <!-- ADMIN PANELİ -->
     <div id="admin-app" class="fixed inset-0 bg-gray-100 z-[100] flex hide">
-        <aside class="w-64 bg-marine-dark text-white flex flex-col">
-            <div class="p-6 font-bold text-xl border-b border-gray-600">Yönetim Paneli</div>
-            <nav class="flex-grow py-4">
-                <a href="#" onclick="adminRouter('products')" class="admin-link block px-6 py-3 hover:bg-gray-700">Ürünler</a>
-                <a href="#" onclick="adminRouter('slider')" class="admin-link block px-6 py-3 hover:bg-gray-700">Slider</a>
+        <aside class="w-64 bg-marine-dark text-white flex flex-col shadow-2xl">
+            <div class="p-6 font-bold text-xl border-b border-white/10 bg-marine-blue/20">Yönetim Paneli</div>
+            <nav class="flex-grow py-4 space-y-1">
+                <a href="#" onclick="adminRouter('products')" class="admin-link block px-6 py-3 hover:bg-white/5 transition">Ürün Yönetimi</a>
+                <a href="#" onclick="adminRouter('slider')" class="admin-link block px-6 py-3 hover:bg-white/5 transition">Slider Ayarları</a>
             </nav>
-            <button onclick="toggleAdminPanel()" class="p-4 bg-red-600 hover:bg-red-700">Çıkış</button>
+            <button onclick="toggleAdminPanel()" class="p-4 bg-red-600 hover:bg-red-700 font-bold transition">Güvenli Çıkış</button>
         </aside>
-        <main id="admin-content" class="flex-grow p-8 overflow-y-auto"></main>
+        <main id="admin-content" class="flex-grow p-8 overflow-y-auto bg-gray-100">
+            <!-- JS Dolduracak -->
+        </main>
     </div>
 
+    <!-- Scriptler -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script src="main.js"></script>
