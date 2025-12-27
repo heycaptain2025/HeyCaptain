@@ -14,7 +14,6 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- Konfigürasyon ve Stil -->
     <script>
         tailwind.config = {
             theme: {
@@ -35,12 +34,9 @@
 
     <style>
         body { font-family: 'Montserrat', sans-serif; background-color: #f9fafb; overflow-x: hidden; }
-        
-        /* Animasyonlar */
-        .fade-in { animation: fadeIn 0.5s ease-in; }
+        .fade-in { animation: fadeIn 0.3s ease-in; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         
-        /* Header Dekorasyon */
         .header-curve {
             position: absolute; bottom: -40px; left: 0; width: 100%; height: 80px;
             background-color: #002B49; border-bottom-left-radius: 50% 40px; border-bottom-right-radius: 50% 40px;
@@ -55,14 +51,13 @@
         }
         .logo-area:hover { transform: translateX(-50%) scale(1.05); }
 
-        /* Ürün Kartı */
         .product-card { 
             background: white; border-radius: 16px; overflow: hidden; transition: all 0.3s ease; 
             border: 1px solid #f3f4f6; position: relative;
         }
         .product-card:hover { 
-            transform: translateY(-8px); 
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); 
+            transform: translateY(-5px); 
+            box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1); 
             border-color: #0088cc;
         }
         .featured-badge {
@@ -71,8 +66,15 @@
             padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: bold;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
+        .discount-badge {
+            position: absolute; top: 10px; right: 10px; z-index: 5;
+            background: #ef4444; color: white;
+            width: 40px; height: 40px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 10px; font-weight: bold; transform: rotate(15deg);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
 
-        /* Chat Widget */
         .chat-widget-btn {
             position: fixed; bottom: 25px; right: 25px; width: 60px; height: 60px;
             background: #FF6B00; color: white; border-radius: 50%;
@@ -89,7 +91,7 @@
         }
         @keyframes chatOpen { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
 
-        /* Admin Layout */
+        /* Admin Mobile */
         .admin-sidebar { transition: transform 0.3s ease; }
         @media (max-width: 768px) {
             .admin-sidebar { transform: translateX(-100%); position: absolute; z-index: 50; height: 100%; }
@@ -99,184 +101,152 @@
 </head>
 <body class="flex flex-col min-h-screen text-gray-800">
 
-    <!-- ==================== FIREBASE LOGIC ==================== -->
+    <!-- ==================== LOGIC LAYER (HYBRID) ==================== -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- GLOBAL STATE ---
-        // Verileri tutacağımız global değişkenler
-        window.state = {
-            products: [],
-            banners: [],
-            categories: ["Elektronik", "Güvenlik", "Aksesuar", "Giyim", "Motor"], // Varsayılanlar
-            messages: [],
-            user: null,
-            userId: localStorage.getItem('marin_uid') // Kullanıcıyı hatırla
+        // --- 1. LOCAL DATABASE (HIZ İÇİN) ---
+        const defaultLocalData = {
+            products: [
+                { id: 101, name: "GPSMAP 1223xsv Chartplotter", brand: "Garmin", category: "Elektronik", basePrice: 2800, currency: "USD", stock: 5, img: "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=500", desc: "12 inç ekran, sonar özellikli.", isFeatured: true },
+                { id: 102, name: "Sigma Otomatik Can Yeleği", brand: "Lalizas", category: "Güvenlik", basePrice: 120, currency: "EUR", stock: 20, img: "https://images.unsplash.com/photo-1616769911429-1a986eb0712d?w=500", desc: "ISO 12402-3 onaylı.", isFeatured: true },
+                { id: 103, name: "Denizci Dürbünü 7x50", brand: "Steiner", category: "Aksesuar", basePrice: 450, currency: "USD", stock: 8, img: "https://images.unsplash.com/photo-1596464716127-f9a08182cb35?w=600", desc: "Su geçirmez profesyonel dürbün.", isFeatured: false },
+                { id: 104, name: "Yelkenli Montu", brand: "Helly Hansen", category: "Giyim", basePrice: 3500, currency: "TRY", stock: 15, img: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=500", desc: "Su geçirmez yelken montu.", isFeatured: false }
+            ],
+            banners: [
+                { id: 1, title: "Yeni Sezon Başladı", sub: "Elektronik ürünlerde %20'ye varan indirimler.", img: "https://images.unsplash.com/photo-1566403487332-95b77c5e2366?w=1600" },
+                { id: 2, title: "Güvenliğiniz Önceliğimiz", sub: "Lalizas can yeleklerinde kampanya.", img: "https://images.unsplash.com/photo-1621216892641-c7c91722880c?w=1600" }
+            ],
+            categories: ["Elektronik", "Güvenlik", "Aksesuar", "Giyim", "Motor", "Yelken"],
+            campaigns: [
+                { id: 1, type: "brand", target: "Garmin", discount: 10, name: "Garmin İndirimi" },
+                { id: 2, type: "category", target: "Giyim", discount: 15, name: "Sezon Sonu" }
+            ]
         };
 
-        // Eğer ID yoksa oluştur ve kaydet (Browser yenilenince kaybolmaması için)
-        if (!window.state.userId) {
-            window.state.userId = 'guest_' + Math.random().toString(36).substr(2, 9);
-            localStorage.setItem('marin_uid', window.state.userId);
-        }
+        // Local Storage Yükleme
+        window.localDB = JSON.parse(localStorage.getItem('marinDB_v4')) || defaultLocalData;
+        window.saveLocalDB = () => {
+            localStorage.setItem('marinDB_v4', JSON.stringify(window.localDB));
+            // Veri değiştiğinde UI güncelle
+            window.dispatchEvent(new Event('db-updated'));
+        };
 
-        // --- FIREBASE CONFIG ---
+        // --- 2. FIREBASE (SADECE CHAT) ---
+        window.chatData = [];
+        window.currentUserId = localStorage.getItem('marin_uid') || 'u_' + Math.random().toString(36).substr(2,9);
+        localStorage.setItem('marin_uid', window.currentUserId);
+
         const firebaseConfig = {
             apiKey: "AIzaSyDQOMYDJ-MzdYRgs_6eaCRoZi7DFg80wuw",
             authDomain: "marinekipman-978e5.firebaseapp.com",
             projectId: "marinekipman-978e5",
             storageBucket: "marinekipman-978e5.firebasestorage.app",
             messagingSenderId: "775827329954",
-            appId: "1:775827329954:web:aace30002bd380f54c98fb",
-            measurementId: "G-4CS6WRWXZE"
+            appId: "1:775827329954:web:aace30002bd380f54c98fb"
         };
 
-        // Init Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const firestoreAppId = 'marinekipman-store-v1'; // Ana Koleksiyon ID
+        try {
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            const db = getFirestore(app);
+            const chatColl = collection(db, 'artifacts', 'marin-chat-v1', 'messages');
 
-        // Helper: Koleksiyon Referansı
-        const getColl = (name) => collection(db, 'artifacts', firestoreAppId, 'public', 'data', name);
-
-        // --- AUTH & LISTENERS ---
-        async function initApp() {
-            try {
-                // Anonim Giriş
-                const userCredential = await signInAnonymously(auth);
-                window.state.user = userCredential.user;
-                console.log("Firebase Bağlantısı Başarılı. UID:", window.state.userId);
-                
-                startListeners();
-            } catch (error) {
-                console.error("Firebase Hatası:", error);
-                toastr.error("Veritabanı bağlantısı kurulamadı. İnternetinizi kontrol edin.");
-            }
-        }
-
-        function startListeners() {
-            // 1. ÜRÜNLERİ DİNLE
-            onSnapshot(getColl('products'), (snapshot) => {
-                window.state.products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                // Sıralama (Client-side)
-                window.state.products.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-                
-                // UI Güncelle
-                if (window.currentRoute === 'home') renderHome();
-                else if (window.currentRoute === 'products') renderProducts();
-                else if (window.currentRoute === 'admin-products') renderAdminProducts();
-                
-                // Yükleme ekranını kaldır
-                const loader = document.getElementById('main-loader');
-                if(loader) loader.classList.add('hidden');
-            });
-
-            // 2. SLIDER (BANNERS) DİNLE
-            onSnapshot(getColl('banners'), (snapshot) => {
-                window.state.banners = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                if (window.currentRoute === 'home') renderHome();
-                if (window.currentRoute === 'admin-slider') renderAdminSlider();
-            });
-
-            // 3. MESAJLARI DİNLE (HEPSİNİ ÇEKİP JS İLE FİLTRELİYORUZ - Daha Güvenli Query için)
-            onSnapshot(getColl('messages'), (snapshot) => {
-                const allMsgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                
-                // Tarihe göre sırala (Eskiden yeniye)
-                allMsgs.sort((a, b) => {
-                    const tA = a.timestamp ? a.timestamp.seconds : (Date.now() / 1000);
-                    const tB = b.timestamp ? b.timestamp.seconds : (Date.now() / 1000);
-                    return tA - tB;
+            // Anonim Giriş
+            signInAnonymously(auth).then(() => {
+                console.log("Chat Bağlantısı Aktif");
+                // Mesajları Dinle
+                onSnapshot(chatColl, (snap) => {
+                    const msgs = snap.docs.map(d => ({id:d.id, ...d.data()}));
+                    msgs.sort((a,b) => (a.timestamp?.seconds || 0) - (b.timestamp?.seconds || 0));
+                    window.chatData = msgs;
+                    window.dispatchEvent(new Event('chat-updated'));
                 });
-
-                window.state.messages = allMsgs;
-                
-                // UI Güncelle
-                renderChatMessages();      // Müşteri Paneli
-                renderAdminChatMessages(); // Admin Paneli
             });
-        }
 
-        // --- GLOBAL JS FUNCTIONS (HTML'den Erişilebilir) ---
-        
-        // Ürün Ekleme (Admin)
-        window.fbAddProduct = async (data) => {
-            data.createdAt = Date.now();
-            await addDoc(getColl('products'), data);
-            toastr.success("Ürün Eklendi");
-        };
-
-        // Ürün Silme (Admin)
-        window.fbDeleteProduct = async (id) => {
-            if(confirm("Bu ürünü silmek istiyor musunuz?")) {
-                await deleteDoc(doc(db, 'artifacts', firestoreAppId, 'public', 'data', 'products', id));
-                toastr.info("Ürün Silindi");
-            }
-        };
-
-        // Banner Ekleme (Admin)
-        window.fbAddBanner = async (data) => {
-            await addDoc(getColl('banners'), data);
-            toastr.success("Banner Eklendi");
-        };
-
-        // Banner Silme
-        window.fbDeleteBanner = async (id) => {
-            await deleteDoc(doc(db, 'artifacts', firestoreAppId, 'public', 'data', 'banners', id));
-        };
-
-        // Mesaj Gönderme
-        window.fbSendMessage = async (text, role, targetId) => {
-            const msgData = {
-                text: text,
-                from: role, // 'user' veya 'admin'
-                userId: targetId || window.state.userId, // Hangi sohbet odasına ait?
-                timestamp: serverTimestamp(),
-                read: false
+            // Mesaj Gönderme
+            window.sendChatMessage = async (text, role, targetUser) => {
+                await addDoc(chatColl, {
+                    text, from: role, userId: targetUser || window.currentUserId,
+                    timestamp: serverTimestamp(), read: false
+                });
             };
-            await addDoc(getColl('messages'), msgData);
-        };
 
-        // Uygulamayı Başlat
-        initApp();
+        } catch(e) { console.error("Firebase Hatası:", e); }
+
+        // --- 3. DÖVİZ KURLARI (TCMB) ---
+        window.rates = { TRY: 1, USD: 36.5, EUR: 38.2 }; // Varsayılan (Yedek)
+        
+        async function fetchRates() {
+            try {
+                // AllOrigins Proxy ile TCMB XML çekme
+                const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent('https://www.tcmb.gov.tr/kurlar/today.xml')}`);
+                const text = await res.text();
+                const parser = new DOMParser();
+                const xml = parser.parseFromString(text, "text/xml");
+                
+                const usd = parseFloat(xml.querySelector('Currency[Kod="USD"] ForexSelling').textContent);
+                const eur = parseFloat(xml.querySelector('Currency[Kod="EUR"] ForexSelling').textContent);
+                
+                if(usd && eur) {
+                    window.rates.USD = usd;
+                    window.rates.EUR = eur;
+                    document.getElementById('rate-ticker').innerHTML = `
+                        <span class="text-green-400 font-bold"><i class="fa-solid fa-tower-broadcast"></i> TCMB Canlı:</span> 
+                        USD: ${usd.toFixed(2)}₺ | EUR: ${eur.toFixed(2)}₺
+                    `;
+                    window.dispatchEvent(new Event('db-updated')); // Fiyatları yenile
+                }
+            } catch(e) {
+                document.getElementById('rate-ticker').innerHTML = `<span class="text-orange-400">Kur Güncellenemedi (Offline)</span>`;
+            }
+        }
+        fetchRates();
 
     </script>
 
-    <!-- ==================== UI & APP LOGIC ==================== -->
+    <!-- ==================== UI APP ==================== -->
     <div id="client-app" class="flex-col flex min-h-screen">
-        <!-- HEADER -->
         <header class="relative mb-24">
             <div class="bg-marine-dark pb-16 pt-4 text-white">
                 <div class="container mx-auto px-4">
-                    <!-- Top Info -->
+                    <!-- Top Bar -->
                     <div class="flex flex-col md:flex-row justify-between items-center border-b border-white/10 pb-3 mb-4 text-xs md:text-sm">
                         <div class="flex items-center gap-4">
-                            <div class="flex items-center bg-white/10 px-3 py-1 rounded-full backdrop-blur-sm border border-white/10">
-                                <i class="fa-solid fa-anchor text-marine-accent mr-2"></i>
-                                <span>MarinEkipman Kurumsal</span>
+                            <div class="flex items-center bg-white/10 px-3 py-1 rounded-full backdrop-blur-sm border border-white/10" id="rate-ticker">
+                                Yükleniyor...
+                            </div>
+                            <div class="flex items-center">
+                                <span class="mr-2 opacity-70">Para Birimi:</span>
+                                <select id="currency-selector" onchange="changeCurrency(this.value)" class="bg-transparent font-bold outline-none cursor-pointer text-marine-accent">
+                                    <option value="TRY" class="text-black">TRY (₺)</option>
+                                    <option value="USD" class="text-black">USD ($)</option>
+                                    <option value="EUR" class="text-black">EUR (€)</option>
+                                </select>
                             </div>
                         </div>
                         <div class="flex gap-4 mt-2 md:mt-0">
-                            <a href="mailto:info@marinekipman.com" class="hover:text-marine-accent"><i class="fa-regular fa-envelope mr-1"></i> Destek</a>
-                            <button onclick="toggleAdminPanel()" class="hover:text-marine-accent font-bold"><i class="fa-solid fa-lock mr-1"></i> Bayi/Admin</button>
+                            <button onclick="toggleAdminPanel()" class="hover:text-marine-accent transition font-bold"><i class="fa-solid fa-user-gear"></i> Yönetim Paneli</button>
                         </div>
                     </div>
 
                     <!-- Navbar -->
                     <div class="flex flex-col md:flex-row justify-between items-center gap-4">
                         <nav class="flex gap-6 font-bold tracking-wide text-sm">
-                            <a href="#" onclick="router('home')" class="hover:text-marine-accent py-2 border-b-2 border-transparent hover:border-marine-accent">ANA SAYFA</a>
-                            <a href="#" onclick="router('products')" class="hover:text-marine-accent py-2 border-b-2 border-transparent hover:border-marine-accent">ÜRÜNLER</a>
-                            <a href="#" onclick="router('contact')" class="hover:text-marine-accent py-2 border-b-2 border-transparent hover:border-marine-accent">İLETİŞİM</a>
+                            <a href="#" onclick="router('home')" class="hover:text-marine-accent py-2">ANA SAYFA</a>
+                            <a href="#" onclick="router('products')" class="hover:text-marine-accent py-2">ÜRÜNLER</a>
+                            <a href="#" onclick="router('contact')" class="hover:text-marine-accent py-2">İLETİŞİM</a>
                         </nav>
-
                         <div class="flex items-center gap-4 w-full md:w-auto justify-end">
+                            <div class="relative group w-full md:w-64">
+                                <input type="text" placeholder="Ürün ara..." onkeyup="handleSearch(this.value)" class="w-full bg-white/10 border border-transparent focus:border-marine-accent focus:bg-white focus:text-marine-dark rounded-full px-4 py-2 text-sm outline-none placeholder-gray-400 text-white">
+                                <div id="search-results" class="absolute top-full left-0 w-full bg-white text-marine-dark mt-2 rounded-lg shadow-xl z-50 hidden max-h-60 overflow-y-auto"></div>
+                            </div>
                             <div onclick="router('cart')" class="relative cursor-pointer group">
                                 <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-marine-dark group-hover:bg-marine-accent group-hover:text-white transition shadow-lg">
-                                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                                    <i class="fa-solid fa-basket-shopping"></i>
                                 </div>
                                 <span id="cart-badge" class="absolute -top-1 -right-1 bg-marine-accent text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-marine-dark">0</span>
                             </div>
@@ -284,10 +254,7 @@
                     </div>
                 </div>
             </div>
-            
             <div class="header-curve"></div>
-            
-            <!-- Logo -->
             <div class="logo-area" onclick="router('home')">
                 <div class="text-center leading-none">
                     <i class="fa-solid fa-anchor text-4xl text-marine-dark mb-1"></i>
@@ -297,176 +264,177 @@
             </div>
         </header>
 
-        <!-- MAIN CONTENT -->
-        <main id="main-content" class="flex-grow container mx-auto px-4 pb-12 fade-in">
-            <!-- Loader -->
-            <div id="main-loader" class="flex flex-col items-center justify-center h-64 text-gray-400">
-                <i class="fa-solid fa-circle-notch fa-spin text-4xl mb-4 text-marine-accent"></i>
-                <p>Veriler Buluttan Yükleniyor...</p>
-            </div>
-        </main>
+        <main id="main-content" class="flex-grow container mx-auto px-4 pb-12 fade-in"></main>
 
-        <!-- FOOTER -->
-        <footer class="bg-marine-dark text-white pt-16 pb-8 border-t-4 border-marine-accent mt-auto">
-            <div class="container mx-auto px-4 text-center text-sm text-gray-400">
-                &copy; 2025 MarinEkipman. Tüm hakları saklıdır.
-            </div>
+        <footer class="bg-marine-dark text-white pt-16 pb-8 border-t-4 border-marine-accent mt-auto text-center text-sm text-gray-400">
+            &copy; 2025 MarinEkipman. Profesyonel Denizcilik Çözümleri.
         </footer>
 
-        <!-- CHAT WIDGET (User Side) -->
-        <div class="chat-widget-btn" onclick="toggleChat()">
-            <i class="fa-regular fa-comments"></i>
-        </div>
+        <!-- CHAT -->
+        <div class="chat-widget-btn" onclick="toggleChat()"><i class="fa-regular fa-comments"></i></div>
         <div id="chat-box" class="chat-box">
-            <div class="bg-marine-dark text-white p-4 font-bold flex justify-between items-center rounded-t-lg">
-                <div class="flex items-center gap-2">
-                    <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                    <span>Canlı Destek</span>
-                </div>
-                <button onclick="toggleChat()" class="hover:text-gray-300"><i class="fa-solid fa-times"></i></button>
+            <div class="bg-marine-dark text-white p-4 font-bold flex justify-between items-center">
+                <div class="flex items-center gap-2"><div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div> Canlı Destek</div>
+                <button onclick="toggleChat()"><i class="fa-solid fa-times"></i></button>
             </div>
-            <div id="chat-messages" class="flex-grow bg-gray-50 p-4 overflow-y-auto space-y-3">
-                <div class="text-center text-gray-400 text-xs mt-4">Sohbet yükleniyor...</div>
-            </div>
+            <div id="chat-messages" class="flex-grow bg-gray-50 p-4 overflow-y-auto space-y-3"></div>
             <div class="p-3 border-t bg-white flex gap-2">
-                <input id="chat-input" type="text" placeholder="Mesajınız..." class="flex-grow border rounded-full px-4 py-2 text-sm focus:outline-none focus:border-marine-blue" onkeypress="if(event.key==='Enter') sendUserMsg()">
-                <button onclick="sendUserMsg()" class="bg-marine-accent text-white w-10 h-10 rounded-full hover:bg-marine-accent-hover transition flex items-center justify-center"><i class="fa-solid fa-paper-plane"></i></button>
+                <input id="chat-input" class="flex-grow border rounded-full px-4 py-2 text-sm outline-none" placeholder="Mesajınız..." onkeypress="if(event.key==='Enter') sendUserMsg()">
+                <button onclick="sendUserMsg()" class="bg-marine-accent text-white w-10 h-10 rounded-full"><i class="fa-solid fa-paper-plane"></i></button>
             </div>
         </div>
     </div>
 
     <!-- ==================== ADMIN APP ==================== -->
     <div id="admin-app" class="fixed inset-0 bg-gray-900 z-[100] hidden flex">
-        <!-- Sidebar -->
         <aside class="w-64 bg-gray-800 border-r border-gray-700 flex flex-col text-white hidden md:flex" id="admin-sidebar">
-            <div class="p-6 border-b border-gray-700">
-                <h2 class="text-2xl font-black text-marine-accent">YÖNETİM</h2>
-                <p class="text-xs text-gray-400">Firebase v3.2 Stable</p>
-            </div>
+            <div class="p-6 border-b border-gray-700"><h2 class="text-2xl font-black text-marine-accent">YÖNETİM</h2><p class="text-xs text-gray-400">Hibrit Sistem v4.0</p></div>
             <nav class="flex-grow p-4 space-y-2">
-                <button onclick="adminRouter('admin-dashboard')" class="w-full text-left p-3 rounded hover:bg-gray-700 flex items-center gap-3"><i class="fa-solid fa-chart-line w-5"></i> Özet</button>
-                <button onclick="adminRouter('admin-products')" class="w-full text-left p-3 rounded hover:bg-gray-700 flex items-center gap-3"><i class="fa-solid fa-box w-5"></i> Ürünler & Excel</button>
-                <button onclick="adminRouter('admin-slider')" class="w-full text-left p-3 rounded hover:bg-gray-700 flex items-center gap-3"><i class="fa-solid fa-images w-5"></i> Slider</button>
-                <button onclick="adminRouter('admin-messages')" class="w-full text-left p-3 rounded hover:bg-gray-700 flex items-center gap-3"><i class="fa-solid fa-comments w-5"></i> Mesajlar</button>
-                <div class="border-t border-gray-700 my-2"></div>
-                <button onclick="location.reload()" class="w-full text-left p-3 rounded hover:bg-red-900/50 text-red-400 flex items-center gap-3"><i class="fa-solid fa-right-from-bracket w-5"></i> Çıkış</button>
+                <button onclick="adminRouter('dash')" class="w-full text-left p-3 rounded hover:bg-gray-700 flex items-center gap-3"><i class="fa-solid fa-chart-line"></i> Özet</button>
+                <button onclick="adminRouter('products')" class="w-full text-left p-3 rounded hover:bg-gray-700 flex items-center gap-3"><i class="fa-solid fa-box"></i> Ürünler</button>
+                <button onclick="adminRouter('campaigns')" class="w-full text-left p-3 rounded hover:bg-gray-700 flex items-center gap-3"><i class="fa-solid fa-tags"></i> Kampanyalar</button>
+                <button onclick="adminRouter('chat')" class="w-full text-left p-3 rounded hover:bg-gray-700 flex items-center gap-3"><i class="fa-solid fa-comments"></i> Mesajlar</button>
+                <button onclick="location.reload()" class="w-full text-left p-3 rounded hover:bg-red-900 mt-10 text-red-400"><i class="fa-solid fa-door-open"></i> Çıkış</button>
             </nav>
         </aside>
-
-        <!-- Main Admin Content -->
-        <main class="flex-grow bg-gray-900 text-white p-8 overflow-y-auto relative">
-            <button onclick="document.getElementById('admin-sidebar').classList.toggle('hidden')" class="md:hidden absolute top-4 left-4 bg-gray-800 p-2 rounded text-white z-50">
-                <i class="fa-solid fa-bars"></i>
-            </button>
-
-            <!-- Login Screen -->
+        <main class="flex-grow bg-gray-900 text-white p-8 overflow-y-auto relative w-full">
+            <button onclick="document.getElementById('admin-sidebar').classList.toggle('hidden')" class="md:hidden absolute top-4 left-4 bg-gray-800 p-2 rounded text-white z-50"><i class="fa-solid fa-bars"></i></button>
             <div id="admin-login" class="fixed inset-0 bg-gray-900 z-[110] flex items-center justify-center">
                 <div class="bg-gray-800 p-8 rounded-xl shadow-2xl w-96 border border-gray-700 text-center">
                     <i class="fa-solid fa-user-shield text-5xl text-marine-accent mb-4"></i>
                     <h2 class="text-xl font-bold mb-6">Yönetici Girişi</h2>
-                    <input type="password" id="admin-pass" placeholder="Şifre (admin)" class="w-full bg-gray-700 border border-gray-600 p-3 rounded mb-4 text-white focus:border-marine-accent outline-none">
-                    <button onclick="checkAdminLogin()" class="w-full bg-marine-accent py-3 rounded font-bold hover:bg-orange-600">Giriş Yap</button>
+                    <input type="password" id="admin-pass" placeholder="Şifre: admin" class="w-full bg-gray-700 border border-gray-600 p-3 rounded mb-4 text-white outline-none">
+                    <button onclick="checkAdminLogin()" class="w-full bg-marine-accent py-3 rounded font-bold">Giriş Yap</button>
                 </div>
             </div>
-
             <div id="admin-content-area"></div>
         </main>
     </div>
 
-    <!-- LOGIC SCRIPTS -->
+    <!-- JAVASCRIPT LOGIC -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     
     <script>
-        // --- LOCAL LOGIC (UI, Cart, Routing) ---
+        // --- CLIENT LOGIC ---
+        let currentRoute = 'home';
+        let activeCurrency = 'TRY';
         let cart = [];
-        window.currentRoute = 'home';
-        let adminSelectedUser = null;
+        let adminChatUser = null;
 
-        // --- ROUTING ---
-        function router(page) {
-            window.currentRoute = page;
-            window.scrollTo(0,0);
+        // Fiyat Hesaplama (Kur + Kampanya)
+        function calcPrice(product) {
+            let rate = 1;
+            if (product.currency === 'USD') rate = window.rates.USD;
+            if (product.currency === 'EUR') rate = window.rates.EUR;
             
-            // Eğer ürünler henüz yüklenmediyse bekle (onSnapshot zaten tetikleyecek)
-            if(window.state.products.length === 0 && page !== 'cart' && page !== 'contact') {
-                document.getElementById('main-content').innerHTML = `
-                    <div class="flex flex-col items-center justify-center h-64 text-gray-400">
-                        <i class="fa-solid fa-circle-notch fa-spin text-3xl mb-4 text-marine-accent"></i>
-                        <span>Veriler Bekleniyor...</span>
-                    </div>`;
-                return; 
-            }
+            let tryPrice = product.basePrice * rate;
 
-            if(page === 'home') renderHome();
-            else if(page === 'products') renderProducts();
-            else if(page === 'cart') renderCart();
-            else if(page === 'contact') renderContact();
+            // Kampanya Kontrolü
+            let discount = 0;
+            let campaignName = "";
+            window.localDB.campaigns.forEach(camp => {
+                if (camp.type === 'category' && camp.target === product.category) {
+                    if (camp.discount > discount) { discount = camp.discount; campaignName = camp.name; }
+                }
+                if (camp.type === 'brand' && camp.target === product.brand) {
+                    if (camp.discount > discount) { discount = camp.discount; campaignName = camp.name; }
+                }
+            });
+
+            const finalTry = tryPrice * ((100 - discount) / 100);
+            
+            // Gösterim Kuru
+            let displayPrice = finalTry;
+            let symbol = '₺';
+            if (activeCurrency === 'USD') { displayPrice = finalTry / window.rates.USD; symbol = '$'; }
+            if (activeCurrency === 'EUR') { displayPrice = finalTry / window.rates.EUR; symbol = '€'; }
+
+            return {
+                amount: displayPrice,
+                symbol: symbol,
+                formatted: new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(displayPrice) + ' ' + symbol,
+                discount: discount,
+                campaignName: campaignName
+            };
         }
 
-        // --- RENDER FUNCTIONS ---
-        function renderHome() {
+        // Routing
+        function router(page) {
+            currentRoute = page;
+            window.scrollTo(0,0);
             const main = document.getElementById('main-content');
-            const banners = window.state.banners || [];
-            const products = window.state.products || [];
-            const featured = products.filter(p => p.isFeatured).slice(0, 4);
+            
+            if (page === 'home') renderHome(main);
+            else if (page === 'products') renderProducts(main);
+            else if (page === 'cart') renderCart(main);
+            else if (page === 'contact') renderContact(main);
+        }
+
+        function renderHome(el) {
+            const banners = window.localDB.banners;
+            const featured = window.localDB.products.filter(p => p.isFeatured);
 
             let sliderHtml = banners.length ? `
-                <div class="relative w-full h-[300px] md:h-[450px] rounded-2xl overflow-hidden shadow-2xl mb-12 group border border-gray-200">
+                <div class="relative w-full h-[300px] md:h-[450px] rounded-2xl overflow-hidden shadow-2xl mb-12 group">
                     <img src="${banners[0].img}" class="w-full h-full object-cover">
                     <div class="absolute inset-0 bg-gradient-to-t from-marine-dark/90 to-transparent flex flex-col justify-end p-8 md:p-16">
                         <h2 class="text-3xl md:text-5xl font-bold text-white mb-2 drop-shadow-md">${banners[0].title}</h2>
                         <p class="text-gray-200 text-lg md:text-xl mb-6 drop-shadow">${banners[0].sub}</p>
-                        <button onclick="router('products')" class="w-fit bg-marine-accent text-white px-8 py-3 rounded-lg font-bold hover:bg-white hover:text-marine-accent transition shadow-lg">İNCELE</button>
+                        <button onclick="router('products')" class="w-fit bg-marine-accent text-white px-8 py-3 rounded-lg font-bold hover:bg-white hover:text-marine-accent transition">İNCELE</button>
                     </div>
-                </div>` : `<div class="bg-gray-200 h-64 rounded-xl flex items-center justify-center mb-12 text-gray-500">Slider Admin'den Eklenebilir</div>`;
+                </div>` : '';
 
-            main.innerHTML = `
+            el.innerHTML = `
                 ${sliderHtml}
                 <div class="flex items-center justify-between mb-6">
                     <h3 class="text-2xl font-bold text-marine-dark border-l-4 border-marine-accent pl-3">Vitrin Ürünleri</h3>
                     <a href="#" onclick="router('products')" class="text-sm font-bold text-marine-blue hover:underline">Tümünü Gör</a>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    ${featured.length ? featured.map(p => createProductHTML(p)).join('') : '<div class="col-span-4 text-center py-10 text-gray-400">Ürün Yok</div>'}
+                    ${featured.length ? featured.map(p => productCard(p)).join('') : '<div class="col-span-4 text-center py-10">Ürün Yok</div>'}
                 </div>
             `;
         }
 
-        function renderProducts() {
-            const main = document.getElementById('main-content');
-            const products = window.state.products;
-            
-            main.innerHTML = `
+        function renderProducts(el) {
+            const products = window.localDB.products;
+            el.innerHTML = `
                 <div class="flex flex-col md:flex-row gap-8">
                     <div class="w-full md:w-1/4">
                         <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 sticky top-4">
                             <h4 class="font-bold border-b pb-3 mb-4 text-marine-dark">Kategoriler</h4>
                             <ul class="space-y-2">
-                                ${window.state.categories.map(c => `<li class="text-gray-600 hover:text-marine-accent cursor-pointer">${c}</li>`).join('')}
+                                <li class="text-marine-accent font-bold cursor-pointer" onclick="router('products')">Tümü</li>
+                                ${window.localDB.categories.map(c => `<li class="text-gray-600 hover:text-marine-accent cursor-pointer">${c}</li>`).join('')}
                             </ul>
                         </div>
                     </div>
                     <div class="w-full md:w-3/4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                        ${products.map(p => createProductHTML(p)).join('')}
+                        ${products.map(p => productCard(p)).join('')}
                     </div>
                 </div>
             `;
         }
 
-        function createProductHTML(p) {
+        function productCard(p) {
+            const price = calcPrice(p);
             return `
             <div class="product-card group flex flex-col h-full">
                 ${p.isFeatured ? '<div class="featured-badge">VİTRİN</div>' : ''}
-                <div class="h-56 p-6 flex items-center justify-center bg-white cursor-pointer" onclick="openProductModal('${p.id}')">
+                ${price.discount > 0 ? `<div class="discount-badge">%${price.discount}</div>` : ''}
+                <div class="h-56 p-6 flex items-center justify-center bg-white">
                     <img src="${p.img}" class="max-h-full max-w-full object-contain group-hover:scale-110 transition duration-500">
                 </div>
                 <div class="p-5 border-t border-gray-100 flex-grow flex flex-col bg-white">
-                    <div class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">${p.brand || 'Genel'}</div>
-                    <h3 class="font-bold text-marine-dark text-sm mb-2 line-clamp-2 cursor-pointer hover:text-marine-accent transition">${p.name}</h3>
+                    <div class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">${p.brand}</div>
+                    <h3 class="font-bold text-marine-dark text-sm mb-2 line-clamp-2">${p.name}</h3>
                     <div class="mt-auto flex justify-between items-end pt-4">
-                        <div class="text-xl font-bold text-marine-blue">${p.basePrice} ${p.currency}</div>
-                        <button onclick="addToCart('${p.id}')" class="w-10 h-10 rounded-full bg-gray-50 text-marine-dark hover:bg-marine-accent hover:text-white flex items-center justify-center transition shadow-sm border border-gray-200">
+                        <div>
+                            ${price.discount > 0 ? `<div class="text-xs text-green-500 font-bold mb-1">${price.campaignName}</div>` : ''}
+                            <div class="text-xl font-bold text-marine-blue">${price.formatted}</div>
+                        </div>
+                        <button onclick="addToCart(${p.id})" class="w-10 h-10 rounded-full bg-gray-50 text-marine-dark hover:bg-marine-accent hover:text-white flex items-center justify-center transition shadow-sm border border-gray-200">
                             <i class="fa-solid fa-plus"></i>
                         </button>
                     </div>
@@ -474,298 +442,173 @@
             </div>`;
         }
 
-        // --- CART & CHAT LOGIC ---
         function addToCart(id) {
-            const p = window.state.products.find(x => x.id === id);
-            if(p) { 
-                cart.push(p); 
-                document.getElementById('cart-badge').innerText = cart.length;
-                toastr.success("Sepete Eklendi");
-            }
+            const p = window.localDB.products.find(x => x.id === id);
+            if(p) { cart.push(p); document.getElementById('cart-badge').innerText = cart.length; toastr.success("Eklendi"); }
         }
 
-        function renderCart() {
-            const main = document.getElementById('main-content');
-            if(cart.length === 0) {
-                main.innerHTML = `<div class="text-center py-20"><h2 class="text-2xl font-bold mb-4">Sepetiniz Boş</h2><button onclick="router('products')" class="bg-marine-accent text-white px-6 py-2 rounded">Ürünlere Git</button></div>`;
-                return;
-            }
-            const items = cart.map((p, i) => `
-                <div class="flex justify-between items-center border-b py-4">
-                    <div class="flex items-center gap-4">
-                        <img src="${p.img}" class="w-16 h-16 object-contain border rounded">
-                        <div>
-                            <div class="font-bold">${p.name}</div>
-                            <div class="text-sm text-gray-500">${p.brand}</div>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <div class="font-bold text-marine-blue">${p.basePrice} ${p.currency}</div>
-                        <button onclick="removeFromCart(${i})" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
-                    </div>
-                </div>
-            `).join('');
-            
-            main.innerHTML = `
-                <div class="max-w-4xl mx-auto bg-white p-8 rounded-xl shadow">
-                    <h2 class="text-2xl font-bold mb-6 border-b pb-4">Teklif Listesi</h2>
-                    ${items}
-                    <div class="mt-8 pt-4 border-t">
-                        <h3 class="font-bold mb-4">Teklif İste</h3>
-                        <div class="grid grid-cols-2 gap-4 mb-4">
-                            <input id="offer-name" placeholder="Ad Soyad" class="border p-3 rounded w-full">
-                            <input id="offer-phone" placeholder="Telefon" class="border p-3 rounded w-full">
-                        </div>
-                        <button onclick="sendOffer()" class="bg-marine-dark text-white w-full py-4 rounded font-bold hover:bg-marine-accent transition">TEKLİF GÖNDER</button>
+        function renderCart(el) {
+            if(cart.length === 0) { el.innerHTML = '<div class="text-center py-20 text-gray-400">Sepet Boş</div>'; return; }
+            el.innerHTML = `
+                <div class="bg-white p-8 rounded-xl shadow max-w-3xl mx-auto">
+                    <h2 class="text-2xl font-bold mb-6">Teklif Listesi</h2>
+                    ${cart.map((p,i) => `<div class="flex justify-between border-b py-2"><span>${p.name}</span><button onclick="cart.splice(${i},1);router('cart')" class="text-red-500">Sil</button></div>`).join('')}
+                    <div class="mt-6">
+                        <input id="q-info" class="border p-3 w-full rounded mb-2" placeholder="Ad Soyad ve Telefon">
+                        <button onclick="toastr.success('Teklif talebi iletildi')" class="bg-marine-dark text-white w-full py-3 rounded font-bold">TEKLİF İSTE</button>
                     </div>
                 </div>
             `;
         }
 
-        function removeFromCart(i) {
-            cart.splice(i, 1);
-            document.getElementById('cart-badge').innerText = cart.length;
-            renderCart();
+        function renderContact(el) {
+            el.innerHTML = `<div class="bg-white p-12 text-center rounded-xl shadow max-w-xl mx-auto">
+                <h1 class="text-3xl font-bold text-marine-dark mb-4">İletişim</h1>
+                <p>0212 555 0000 | info@marin.com</p>
+            </div>`;
         }
 
-        function sendOffer() {
-            const n = document.getElementById('offer-name').value;
-            const p = document.getElementById('offer-phone').value;
-            if(!n || !p) { toastr.warning("İletişim bilgileri zorunludur."); return; }
-            const body = `MÜŞTERİ: ${n} (${p})%0D%0AÜRÜNLER:%0D%0A` + cart.map(x => `- ${x.name}`).join('%0D%0A');
-            window.location.href = `mailto:info@marinekipman.com?subject=Teklif&body=${body}`;
-        }
-
-        // --- USER CHAT ---
+        function changeCurrency(v) { activeCurrency = v; router(currentRoute); }
+        
+        // --- CHAT LOGIC ---
         function toggleChat() {
-            const box = document.getElementById('chat-box');
-            if(box.style.display === 'flex') box.style.display = 'none';
-            else { box.style.display = 'flex'; renderChatMessages(); }
+            const b = document.getElementById('chat-box');
+            b.style.display = b.style.display === 'flex' ? 'none' : 'flex';
+            if(b.style.display === 'flex') renderChat();
         }
-
         function sendUserMsg() {
             const txt = document.getElementById('chat-input').value.trim();
-            if(!txt) return;
-            // Firebase Global Function Call
-            window.fbSendMessage(txt, 'user', window.state.userId);
-            document.getElementById('chat-input').value = '';
+            if(txt && window.sendChatMessage) {
+                window.sendChatMessage(txt, 'user');
+                document.getElementById('chat-input').value = '';
+            }
         }
-
-        function renderChatMessages() {
-            const container = document.getElementById('chat-messages');
-            if(!container) return;
-            
-            // Sadece bu kullanıcıya ait mesajları filtrele
-            const myMsgs = window.state.messages.filter(m => m.userId === window.state.userId);
-            
-            container.innerHTML = myMsgs.map(m => `
-                <div class="flex flex-col ${m.from === 'user' ? 'items-end' : 'items-start'}">
-                    <div class="max-w-[85%] p-2 rounded-lg text-sm mb-1 ${m.from === 'user' ? 'bg-marine-blue text-white rounded-br-none' : 'bg-gray-200 text-gray-800 rounded-bl-none'}">
-                        ${m.text}
-                    </div>
-                    <span class="text-[10px] text-gray-400">${new Date(m.timestamp?.seconds * 1000).toLocaleTimeString().slice(0,5) || '...'}</span>
-                </div>
-            `).join('');
-            container.scrollTop = container.scrollHeight;
+        function renderChat() {
+            const div = document.getElementById('chat-messages');
+            const msgs = window.chatData.filter(m => m.userId === window.currentUserId);
+            div.innerHTML = msgs.map(m => `<div class="flex flex-col ${m.from==='user'?'items-end':'items-start'}"><div class="max-w-[85%] p-2 rounded text-sm mb-1 ${m.from==='user'?'bg-marine-blue text-white':'bg-gray-200'}">${m.text}</div></div>`).join('');
+            div.scrollTop = div.scrollHeight;
         }
+        // Chat güncelleme listener
+        window.addEventListener('chat-updated', () => {
+            if(document.getElementById('chat-box').style.display === 'flex') renderChat();
+            if(!document.getElementById('admin-app').classList.contains('hidden')) renderAdminChat();
+        });
+        window.addEventListener('db-updated', () => router(currentRoute));
 
-        // --- ADMIN PANEL LOGIC ---
-        function toggleAdminPanel() {
+        // --- ADMIN PANEL ---
+        function toggleAdminPanel() { 
             const p = document.getElementById('admin-app');
             const l = document.getElementById('admin-login');
             if(p.classList.contains('hidden')) { p.classList.remove('hidden'); l.classList.remove('hidden'); }
             else p.classList.add('hidden');
         }
-
         function checkAdminLogin() {
             if(document.getElementById('admin-pass').value === 'admin') {
                 document.getElementById('admin-login').classList.add('hidden');
-                adminRouter('admin-dashboard');
-                toastr.success("Giriş Başarılı");
+                adminRouter('dash');
             } else toastr.error("Hatalı Şifre");
         }
-
         function adminRouter(page) {
-            window.currentRoute = page;
             const area = document.getElementById('admin-content-area');
-            
-            if(page === 'admin-dashboard') {
-                area.innerHTML = `
-                    <h2 class="text-3xl font-bold mb-6">Özet</h2>
-                    <div class="grid grid-cols-3 gap-6">
-                        <div class="bg-gray-800 p-6 rounded border border-gray-700">
-                            <div class="text-gray-400">Ürün Sayısı</div>
-                            <div class="text-3xl font-bold">${window.state.products.length}</div>
-                        </div>
-                        <div class="bg-gray-800 p-6 rounded border border-gray-700">
-                            <div class="text-gray-400">Mesajlar</div>
-                            <div class="text-3xl font-bold text-green-500">${window.state.messages.length}</div>
-                        </div>
-                    </div>
-                `;
-            } else if (page === 'admin-products') {
-                renderAdminProducts();
-            } else if (page === 'admin-slider') {
-                renderAdminSlider();
-            } else if (page === 'admin-messages') {
-                renderAdminChatMessages();
+            if(page === 'dash') {
+                area.innerHTML = `<h2 class="text-3xl font-bold mb-6">Özet</h2>
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="bg-gray-800 p-6 rounded">Ürün Sayısı: ${window.localDB.products.length}</div>
+                    <div class="bg-gray-800 p-6 rounded">Kampanyalar: ${window.localDB.campaigns.length}</div>
+                </div>`;
+            } else if (page === 'products') {
+                const list = window.localDB.products.map(p => `
+                    <div class="flex justify-between items-center bg-gray-800 p-3 rounded mb-2">
+                        <div class="flex items-center gap-3"><img src="${p.img}" class="w-10 h-10 rounded"> <span>${p.name}</span></div>
+                        <button onclick="window.localDB.products = window.localDB.products.filter(x=>x.id!=${p.id}); window.saveLocalDB(); adminRouter('products')" class="text-red-400">Sil</button>
+                    </div>`).join('');
+                area.innerHTML = `<h2 class="text-2xl font-bold mb-4">Ürünler</h2>
+                <div class="mb-4 flex gap-2">
+                    <input id="adm-p-name" placeholder="Ad" class="bg-gray-700 p-2 rounded text-white">
+                    <input id="adm-p-price" placeholder="Fiyat" class="bg-gray-700 p-2 rounded text-white w-24">
+                    <button onclick="addLocalProduct()" class="bg-green-600 px-4 rounded">Ekle</button>
+                </div>
+                ${list}`;
+            } else if (page === 'campaigns') {
+                const list = window.localDB.campaigns.map((c,i) => `
+                    <div class="flex justify-between bg-gray-800 p-3 rounded mb-2">
+                        <span>${c.name} (${c.target} - %${c.discount})</span>
+                        <button onclick="window.localDB.campaigns.splice(${i},1); window.saveLocalDB(); adminRouter('campaigns')" class="text-red-400">Sil</button>
+                    </div>`).join('');
+                area.innerHTML = `<h2 class="text-2xl font-bold mb-4">Kampanyalar</h2>
+                <div class="mb-4 flex gap-2">
+                    <select id="cmp-type" class="bg-gray-700 p-2 rounded text-white"><option value="category">Kategori</option><option value="brand">Marka</option></select>
+                    <input id="cmp-target" placeholder="Hedef (Örn: Giyim)" class="bg-gray-700 p-2 rounded text-white">
+                    <input id="cmp-disc" placeholder="%" class="bg-gray-700 p-2 rounded text-white w-16">
+                    <button onclick="addCampaign()" class="bg-green-600 px-4 rounded">Ekle</button>
+                </div>
+                ${list}`;
+            } else if (page === 'chat') {
+                renderAdminChat(area);
             }
         }
 
-        function renderAdminProducts() {
-            const area = document.getElementById('admin-content-area');
-            const list = window.state.products.map(p => `
-                <tr class="border-b border-gray-700 hover:bg-gray-700/50">
-                    <td class="p-3"><img src="${p.img}" class="w-10 h-10 object-contain bg-white rounded"></td>
-                    <td class="p-3 font-bold">${p.name}</td>
-                    <td class="p-3">${p.basePrice} ${p.currency}</td>
-                    <td class="p-3 text-right">
-                        <button onclick="window.fbDeleteProduct('${p.id}')" class="text-red-400 hover:text-white"><i class="fa-solid fa-trash"></i></button>
-                    </td>
-                </tr>
-            `).join('');
-
-            area.innerHTML = `
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold">Ürün Yönetimi</h2>
-                    <button onclick="document.getElementById('adm-prod-modal').classList.remove('hidden')" class="bg-marine-accent px-4 py-2 rounded font-bold">Yeni Ekle</button>
-                </div>
-                <div class="bg-gray-800 rounded border border-gray-700 overflow-hidden">
-                    <table class="w-full text-left text-sm">
-                        <thead class="bg-gray-700 text-gray-400 uppercase font-bold text-xs">
-                            <tr><th class="p-3">Resim</th><th class="p-3">Ad</th><th class="p-3">Fiyat</th><th class="p-3 text-right">İşlem</th></tr>
-                        </thead>
-                        <tbody>${list}</tbody>
-                    </table>
-                </div>
-
-                <!-- ADD MODAL -->
-                <div id="adm-prod-modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-                    <div class="bg-gray-800 p-6 rounded border border-gray-700 w-full max-w-lg">
-                        <h3 class="font-bold mb-4 text-lg">Hızlı Ürün Ekle</h3>
-                        <input id="adm-p-name" placeholder="Ürün Adı" class="w-full bg-gray-700 border border-gray-600 p-2 rounded mb-2 text-white">
-                        <div class="flex gap-2 mb-2">
-                            <input id="adm-p-price" type="number" placeholder="Fiyat" class="w-1/2 bg-gray-700 border border-gray-600 p-2 rounded text-white">
-                            <select id="adm-p-curr" class="w-1/2 bg-gray-700 border border-gray-600 p-2 rounded text-white"><option>TRY</option><option>USD</option><option>EUR</option></select>
-                        </div>
-                        <input id="adm-p-img" placeholder="Resim URL" class="w-full bg-gray-700 border border-gray-600 p-2 rounded mb-4 text-white">
-                        <div class="flex justify-end gap-2">
-                            <button onclick="document.getElementById('adm-prod-modal').classList.add('hidden')" class="px-4 py-2 bg-gray-600 rounded">İptal</button>
-                            <button onclick="addProdClick()" class="px-4 py-2 bg-green-600 rounded font-bold">Kaydet</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function addProdClick() {
+        function addLocalProduct() {
             const name = document.getElementById('adm-p-name').value;
             const price = document.getElementById('adm-p-price').value;
-            const curr = document.getElementById('adm-p-curr').value;
-            const img = document.getElementById('adm-p-img').value;
             if(name && price) {
-                window.fbAddProduct({ name, basePrice: parseFloat(price), currency: curr, img: img || 'https://placehold.co/300', category:'Genel', stock:10 });
-                document.getElementById('adm-prod-modal').classList.add('hidden');
+                window.localDB.products.push({
+                    id: Date.now(), name, basePrice: parseFloat(price), currency: 'TRY', stock: 10, category: 'Genel', brand: 'Diğer', img: 'https://placehold.co/300', desc: '', isFeatured: false
+                });
+                window.saveLocalDB();
+                adminRouter('products');
             }
         }
 
-        // Admin Slider
-        function renderAdminSlider() {
-            const area = document.getElementById('admin-content-area');
-            const items = window.state.banners.map(b => `
-                <div class="relative h-32 rounded overflow-hidden border border-gray-600 group">
-                    <img src="${b.img}" class="w-full h-full object-cover opacity-50">
-                    <div class="absolute bottom-2 left-2 font-bold">${b.title}</div>
-                    <button onclick="window.fbDeleteBanner('${b.id}')" class="absolute top-2 right-2 bg-red-600 w-8 h-8 rounded text-white"><i class="fa-solid fa-trash"></i></button>
-                </div>
-            `).join('');
-
-            area.innerHTML = `
-                <h2 class="text-2xl font-bold mb-6">Slider Yönetimi</h2>
-                <div class="bg-gray-800 p-4 rounded mb-6 border border-gray-700 flex gap-2">
-                    <input id="adm-sl-title" placeholder="Başlık" class="bg-gray-700 border border-gray-600 p-2 rounded text-white">
-                    <input id="adm-sl-sub" placeholder="Alt Başlık" class="bg-gray-700 border border-gray-600 p-2 rounded text-white">
-                    <input id="adm-sl-img" placeholder="Resim URL" class="bg-gray-700 border border-gray-600 p-2 rounded text-white flex-grow">
-                    <button onclick="addBannerClick()" class="bg-marine-accent px-4 rounded font-bold">Ekle</button>
-                </div>
-                <div class="grid grid-cols-2 gap-4">${items}</div>
-            `;
-        }
-        function addBannerClick() {
-            const t = document.getElementById('adm-sl-title').value;
-            const s = document.getElementById('adm-sl-sub').value;
-            const i = document.getElementById('adm-sl-img').value;
-            if(t && i) window.fbAddBanner({ title: t, sub: s, img: i });
+        function addCampaign() {
+            const type = document.getElementById('cmp-type').value;
+            const target = document.getElementById('cmp-target').value;
+            const disc = document.getElementById('cmp-disc').value;
+            if(target && disc) {
+                window.localDB.campaigns.push({ type, target, discount: parseFloat(disc), name: target + ' İndirimi' });
+                window.saveLocalDB();
+                adminRouter('campaigns');
+            }
         }
 
-        // Admin Chat
-        function renderAdminChatMessages() {
-            const area = document.getElementById('admin-content-area');
-            if(!area) return;
-
-            // Mesajları userId'ye göre grupla
+        function renderAdminChat(domArea) {
+            const area = domArea || document.getElementById('admin-content-area');
             const groups = {};
-            window.state.messages.forEach(m => {
-                if(!groups[m.userId]) groups[m.userId] = [];
-                groups[m.userId].push(m);
-            });
-
-            // Kullanıcı Listesi HTML
-            const userList = Object.keys(groups).map(uid => `
-                <div onclick="adminSelectedUser='${uid}'; renderAdminChatMessages()" class="p-3 border-b border-gray-700 cursor-pointer hover:bg-gray-700 ${adminSelectedUser === uid ? 'bg-marine-blue' : ''}">
-                    <div class="font-bold text-xs text-gray-400">User: ${uid.substr(0,6)}...</div>
-                    <div class="text-sm truncate text-white">${groups[uid][groups[uid].length-1].text}</div>
-                </div>
-            `).join('');
-
-            // Sohbet Alanı HTML
-            let chatArea = '<div class="flex items-center justify-center h-full text-gray-500">Kullanıcı Seçin</div>';
-            if(adminSelectedUser && groups[adminSelectedUser]) {
-                chatArea = groups[adminSelectedUser].map(m => `
-                    <div class="flex flex-col ${m.from === 'admin' ? 'items-end' : 'items-start'} mb-2">
-                        <div class="p-2 rounded text-sm max-w-[80%] ${m.from === 'admin' ? 'bg-marine-blue' : 'bg-gray-600'}">
-                            ${m.text}
-                        </div>
-                        <span class="text-[10px] text-gray-500">${m.from}</span>
-                    </div>
-                `).join('');
+            window.chatData.forEach(m => { if(!groups[m.userId]) groups[m.userId]=[]; groups[m.userId].push(m); });
+            
+            const usersHtml = Object.keys(groups).map(u => `<div onclick="adminChatUser='${u}'; renderAdminChat()" class="p-3 bg-gray-800 mb-2 cursor-pointer ${adminChatUser===u?'border-l-4 border-marine-accent':''}">${u.substr(0,8)}...</div>`).join('');
+            
+            let msgsHtml = '<div class="text-gray-500">Seçiniz</div>';
+            if(adminChatUser && groups[adminChatUser]) {
+                msgsHtml = groups[adminChatUser].map(m => `<div class="mb-2 ${m.from==='admin'?'text-right text-marine-light':'text-left'}">${m.text}</div>`).join('');
             }
 
             area.innerHTML = `
-                <h2 class="text-2xl font-bold mb-4">Canlı Sohbetler</h2>
-                <div class="flex h-[500px] bg-gray-800 border border-gray-700 rounded overflow-hidden">
-                    <div class="w-1/3 border-r border-gray-700 overflow-y-auto">${userList}</div>
-                    <div class="w-2/3 flex flex-col">
-                        <div class="flex-grow p-4 overflow-y-auto" id="adm-chat-scroll">${chatArea}</div>
-                        <div class="p-3 border-t border-gray-700 flex gap-2 bg-gray-900">
-                            <input id="adm-msg-in" class="flex-grow bg-gray-800 border border-gray-600 rounded p-2 text-white" placeholder="Cevap...">
-                            <button onclick="sendAdminReply()" class="bg-marine-accent px-4 rounded font-bold">Yolla</button>
+                <h2 class="text-2xl font-bold mb-4">Mesajlar (Firebase)</h2>
+                <div class="flex h-[500px] border border-gray-700">
+                    <div class="w-1/4 border-r border-gray-700 p-2 overflow-y-auto">${usersHtml}</div>
+                    <div class="w-3/4 flex flex-col p-4 bg-gray-800">
+                        <div class="flex-grow overflow-y-auto mb-2">${msgsHtml}</div>
+                        <div class="flex gap-2">
+                            <input id="adm-chat-in" class="flex-grow bg-gray-700 p-2 rounded text-white">
+                            <button onclick="sendAdminChat()" class="bg-marine-accent px-4 rounded">Yolla</button>
                         </div>
                     </div>
-                </div>
-            `;
-            setTimeout(() => { const s = document.getElementById('adm-chat-scroll'); if(s) s.scrollTop = s.scrollHeight; }, 50);
+                </div>`;
         }
 
-        function sendAdminReply() {
-            const txt = document.getElementById('adm-msg-in').value;
-            if(txt && adminSelectedUser) {
-                window.fbSendMessage(txt, 'admin', adminSelectedUser);
+        function sendAdminChat() {
+            const txt = document.getElementById('adm-chat-in').value;
+            if(txt && adminChatUser) {
+                window.sendChatMessage(txt, 'admin', adminChatUser);
             }
         }
 
-        function renderContact() {
-            document.getElementById('main-content').innerHTML = `
-                <div class="bg-white p-12 text-center rounded-xl shadow border border-gray-100 max-w-2xl mx-auto">
-                    <h1 class="text-3xl font-bold text-marine-dark mb-4">İletişim</h1>
-                    <p class="mb-8 text-gray-500">Bize her zaman ulaşabilirsiniz.</p>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="p-4 border rounded hover:border-marine-accent"><i class="fa-solid fa-phone mb-2 block text-2xl text-marine-accent"></i> 0212 555 0000</div>
-                        <div class="p-4 border rounded hover:border-marine-accent"><i class="fa-solid fa-envelope mb-2 block text-2xl text-marine-accent"></i> info@marin.com</div>
-                    </div>
-                </div>
-            `;
-        }
+        // Başlangıç
+        document.addEventListener('DOMContentLoaded', () => {
+            router('home');
+        });
 
     </script>
 </body>
