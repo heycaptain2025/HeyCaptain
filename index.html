@@ -90,6 +90,14 @@
             font-weight: bold; font-size: 12px; transform: rotate(15deg); z-index: 5;
             box-shadow: 0 4px 6px rgba(0,0,0,0.2);
         }
+        
+        /* Vitrin Rozeti */
+        .featured-badge {
+            position: absolute; top: 10px; left: 10px; 
+            background: linear-gradient(45deg, #002B49, #005F88);
+            color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold;
+            z-index: 5; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
@@ -228,7 +236,7 @@
         <aside class="w-64 bg-gray-800 border-r border-gray-700 flex flex-col text-white">
             <div class="p-6 border-b border-gray-700">
                 <h2 class="text-2xl font-black text-marine-accent">YÖNETİM</h2>
-                <p class="text-xs text-gray-400">MarinEkipman v2.2</p>
+                <p class="text-xs text-gray-400">MarinEkipman v2.3</p>
             </div>
             <nav class="flex-grow p-4 space-y-2">
                 <button onclick="adminRoute('dashboard')" class="w-full text-left p-3 rounded hover:bg-gray-700 flex items-center gap-3"><i class="fa-solid fa-chart-line w-5"></i> Özet</button>
@@ -282,9 +290,9 @@
             },
             categories: ["Elektronik", "Güvenlik", "Aksesuar", "Giyim", "Motor", "Navigasyon", "Yelken"],
             products: [
-                { id: 1, name: "GPSMAP 1223xsv Chartplotter", brand: "Garmin", category: "Elektronik", basePrice: 2800, currency: "USD", stock: 5, img: "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=500", desc: "12 inç ekran, sonar özellikli." },
-                { id: 2, name: "Sigma Otomatik Can Yeleği", brand: "Lalizas", category: "Güvenlik", basePrice: 120, currency: "EUR", stock: 20, img: "https://images.unsplash.com/photo-1616769911429-1a986eb0712d?w=500", desc: "ISO 12402-3 onaylı, otomatik şişme." },
-                { id: 3, name: "Denizci Dürbünü 7x50", brand: "Steiner", category: "Aksesuar", basePrice: 450, currency: "USD", stock: 8, img: "https://images.unsplash.com/photo-1596464716127-f9a08182cb35?w=600", desc: "Su geçirmez, pusulalı profesyonel dürbün." }
+                { id: 1, name: "GPSMAP 1223xsv Chartplotter", brand: "Garmin", category: "Elektronik", basePrice: 2800, currency: "USD", stock: 5, img: "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=500", desc: "12 inç ekran, sonar özellikli.", isFeatured: true },
+                { id: 2, name: "Sigma Otomatik Can Yeleği", brand: "Lalizas", category: "Güvenlik", basePrice: 120, currency: "EUR", stock: 20, img: "https://images.unsplash.com/photo-1616769911429-1a986eb0712d?w=500", desc: "ISO 12402-3 onaylı, otomatik şişme.", isFeatured: true },
+                { id: 3, name: "Denizci Dürbünü 7x50", brand: "Steiner", category: "Aksesuar", basePrice: 450, currency: "USD", stock: 8, img: "https://images.unsplash.com/photo-1596464716127-f9a08182cb35?w=600", desc: "Su geçirmez, pusulalı profesyonel dürbün.", isFeatured: false }
             ],
             campaigns: [],
             banners: [
@@ -302,6 +310,8 @@
         if(!db.settings) db.settings = defaultData.settings;
         if(!db.campaigns) db.campaigns = [];
         if(!db.categories) db.categories = defaultData.categories;
+        // Fix for existing products without isFeatured field
+        db.products.forEach(p => { if(typeof p.isFeatured === 'undefined') p.isFeatured = false; });
         
         // Kurlar
         let activeCurrency = "TRY";
@@ -422,15 +432,19 @@
                 </div>`;
             }
 
-            const featured = db.products.slice(-4).reverse();
+            // Öne Çıkanlar Mantığı: Eğer 'isFeatured' varsa onları al, yoksa son 4 ürünü al.
+            let featured = db.products.filter(p => p.isFeatured);
+            if(featured.length === 0) featured = db.products.slice(-4).reverse();
+            else featured = featured.reverse();
+
             mainEl.innerHTML = `
                 ${sliderHtml}
                 <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-2xl font-bold text-marine-dark border-l-4 border-marine-accent pl-3">Öne Çıkan Ürünler</h3>
+                    <h3 class="text-2xl font-bold text-marine-dark border-l-4 border-marine-accent pl-3">Vitrin Ürünleri</h3>
                     <a href="#" onclick="router('products')" class="text-sm font-bold text-marine-blue hover:underline">Tümünü Gör <i class="fa-solid fa-arrow-right ml-1"></i></a>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    ${featured.map(p => createProductCard(p)).join('')}
+                    ${featured.length > 0 ? featured.map(p => createProductCard(p)).join('') : '<div class="col-span-4 text-center text-gray-400 py-10">Öne çıkan ürün bulunamadı.</div>'}
                 </div>
                 <div class="mt-16 pt-8 border-t">
                     <h4 class="text-center font-bold text-gray-400 mb-6 text-sm tracking-widest">ÇALIŞTIĞIMIZ MARKALAR</h4>
@@ -484,12 +498,14 @@
                 ? (p.stock < 5 ? `<span class="absolute top-2 left-2 bg-orange-500 text-white text-[10px] px-2 py-1 rounded font-bold">SON ${p.stock}</span>` : `<span class="absolute top-2 left-2 bg-green-500 text-white text-[10px] px-2 py-1 rounded font-bold">STOKTA</span>`)
                 : `<span class="absolute top-2 left-2 bg-red-500 text-white text-[10px] px-2 py-1 rounded font-bold">TÜKENDİ</span>`;
             const discountBadge = priceInfo.isDiscounted ? `<div class="discount-badge">%${priceInfo.discountRate}<br>İNDİRİM</div>` : '';
+            const featuredBadge = p.isFeatured ? `<div class="featured-badge"><i class="fa-solid fa-star text-yellow-400 mr-1"></i> Vitrin</div>` : '';
+
             let priceDisplay = priceInfo.isDiscounted ? `
                 <div class="flex flex-col items-start"><span class="text-xs text-gray-400 line-through">${formatMoney(priceInfo.baseTRY)}</span><span class="text-lg font-bold text-marine-accent">${formatMoney(priceInfo.finalTRY)}</span></div>` 
                 : `<div class="text-lg font-bold text-marine-blue">${formatMoney(priceInfo.finalTRY)}</div>`;
             return `
             <div class="product-card rounded-lg overflow-hidden flex flex-col h-full group relative">
-                ${stockHtml} ${discountBadge}
+                ${stockHtml} ${discountBadge} ${featuredBadge}
                 <div class="h-48 p-4 flex items-center justify-center cursor-pointer bg-white" onclick="router('detail', ${p.id})">
                     <img src="${p.img}" class="max-h-full max-w-full object-contain group-hover:scale-105 transition duration-300">
                 </div>
@@ -515,6 +531,7 @@
                 <div class="flex flex-col lg:flex-row gap-8 bg-white p-6 md:p-10 rounded-xl shadow-lg border border-gray-100">
                     <div class="w-full lg:w-1/2 flex items-center justify-center border rounded-lg p-8 bg-white relative">
                         ${priceInfo.isDiscounted ? `<div class="absolute top-4 right-4 bg-marine-accent text-white font-bold px-3 py-1 rounded-full text-sm">Fırsat Ürünü</div>` : ''}
+                        ${p.isFeatured ? `<div class="absolute top-4 left-4 bg-marine-dark text-white font-bold px-3 py-1 rounded-full text-sm"><i class="fa-solid fa-star text-yellow-400"></i> Vitrin</div>` : ''}
                         <img src="${p.img}" class="max-h-[400px] object-contain">
                     </div>
                     <div class="w-full lg:w-1/2 flex flex-col">
@@ -635,7 +652,10 @@
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-2xl font-bold">Ürün Yönetimi</h2>
                     <div class="flex gap-2">
-                        <!-- Excel Butonu -->
+                        <!-- Excel İndir -->
+                        <button onclick="exportProductsToExcel()" class="bg-blue-600 px-4 py-2 rounded text-white font-bold hover:bg-blue-700"><i class="fa-solid fa-download mr-2"></i> Excel İndir</button>
+                        
+                        <!-- Excel Yükle -->
                         <div class="relative overflow-hidden">
                             <button class="bg-green-600 px-4 py-2 rounded text-white font-bold hover:bg-green-700 cursor-pointer"><i class="fa-solid fa-file-excel mr-2"></i> Excel Yükle</button>
                             <input type="file" onchange="handleExcelUpload(event)" accept=".xlsx, .xls" class="absolute inset-0 opacity-0 cursor-pointer">
@@ -645,13 +665,13 @@
                 </div>
 
                 <div class="text-xs text-gray-400 mb-4 p-3 border border-gray-700 rounded bg-gray-800/50">
-                    <i class="fa-solid fa-circle-info mr-1"></i> <b>Excel Formatı:</b> Sütun başlıkları: <i>Ad, Marka, Kategori, Fiyat, ParaBirimi, Stok, Resim, Aciklama</i> olmalıdır. Varolan ürünlerin "Ad"ı eşleşirse fiyat/stok güncellenir.
+                    <i class="fa-solid fa-circle-info mr-1"></i> <b>Excel Formatı:</b> Sütun başlıkları: <i>Ad, Marka, Kategori, Fiyat, ParaBirimi, Stok, Resim, Aciklama, Vitrin(1/0)</i>. Varolan ürünlerin "Ad"ı eşleşirse güncellenir.
                 </div>
 
                 <!-- LİSTE -->
                 <div class="bg-gray-800 rounded overflow-hidden">
                     <table class="w-full text-left text-gray-300 text-sm">
-                        <thead class="bg-gray-700 uppercase font-bold text-xs text-gray-400"><tr><th class="p-4">Resim</th><th class="p-4">Ad</th><th class="p-4">Fiyat</th><th class="p-4">Stok</th><th class="p-4 text-right">İşlem</th></tr></thead>
+                        <thead class="bg-gray-700 uppercase font-bold text-xs text-gray-400"><tr><th class="p-4">Resim</th><th class="p-4">Ad</th><th class="p-4">Fiyat</th><th class="p-4">Stok</th><th class="p-4">Durum</th><th class="p-4 text-right">İşlem</th></tr></thead>
                         <tbody>
                             ${db.products.map(p => `
                                 <tr class="border-b border-gray-700 hover:bg-gray-700/50">
@@ -659,6 +679,7 @@
                                     <td class="p-4 font-bold text-white">${p.name} <br><span class="text-xs font-normal text-gray-500">${p.category}</span></td>
                                     <td class="p-4">${p.basePrice} ${p.currency}</td>
                                     <td class="p-4 ${p.stock<5?'text-red-400 font-bold':''}">${p.stock}</td>
+                                    <td class="p-4 text-xs">${p.isFeatured ? '<span class="text-yellow-400 font-bold"><i class="fa-solid fa-star"></i> Vitrin</span>' : '<span class="text-gray-500">Standart</span>'}</td>
                                     <td class="p-4 text-right"><button onclick="editProduct(${p.id})" class="text-blue-400 mr-3"><i class="fa-solid fa-pen"></i></button><button onclick="deleteProduct(${p.id})" class="text-red-400"><i class="fa-solid fa-trash"></i></button></td>
                                 </tr>`).join('')}
                         </tbody>
@@ -682,6 +703,12 @@
                             <input id="p-stock" type="number" placeholder="Stok" class="bg-gray-700 border border-gray-600 p-2 rounded text-white">
                             <input id="p-img" type="text" placeholder="Resim URL" class="bg-gray-700 border border-gray-600 p-2 rounded text-white">
                         </div>
+                        <div class="mb-4">
+                             <label class="flex items-center gap-2 text-white cursor-pointer select-none bg-gray-700 p-2 rounded border border-gray-600">
+                                <input type="checkbox" id="p-featured" class="w-5 h-5">
+                                <span class="font-bold">Bu Ürünü Öne Çıkar (Vitrinde Göster)</span>
+                            </label>
+                        </div>
                         <textarea id="p-desc" placeholder="Açıklama" class="w-full bg-gray-700 border border-gray-600 p-2 rounded text-white mb-4 h-20"></textarea>
                         <div class="flex justify-end gap-3"><button onclick="closeProductModal()" class="bg-gray-600 px-4 py-2 rounded">İptal</button><button onclick="saveProduct()" class="bg-green-600 px-4 py-2 rounded font-bold">Kaydet</button></div>
                     </div>
@@ -689,7 +716,28 @@
                 `;
         }
 
-        // Excel İşleme Mantığı
+        // EXCEL DIŞA AKTAR
+        function exportProductsToExcel() {
+            const data = db.products.map(p => ({
+                Ad: p.name,
+                Marka: p.brand,
+                Kategori: p.category,
+                Fiyat: p.basePrice,
+                ParaBirimi: p.currency,
+                Stok: p.stock,
+                Resim: p.img,
+                Aciklama: p.desc,
+                Vitrin: p.isFeatured ? 1 : 0
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Urunler");
+            XLSX.writeFile(wb, "MarinEkipman_Urunler.xlsx");
+            toastr.success("Excel dosyası indirildi.");
+        }
+
+        // Excel Yükleme Mantığı
         function handleExcelUpload(e) {
             const file = e.target.files[0];
             const reader = new FileReader();
@@ -704,20 +752,18 @@
                 let newCount = 0;
 
                 json.forEach(row => {
-                    // Excel Sütun Adları: Ad, Marka, Kategori, Fiyat, ParaBirimi, Stok, Resim, Aciklama
                     if(!row.Ad || !row.Fiyat) return;
 
-                    // Var olan ürünü bul (İsim eşleşmesi)
                     const existingProduct = db.products.find(p => p.name.toLowerCase() === row.Ad.toLowerCase());
+                    const isFeat = (row.Vitrin == 1);
 
                     if(existingProduct) {
-                        // Güncelle
                         existingProduct.basePrice = row.Fiyat;
                         existingProduct.stock = row.Stok || existingProduct.stock;
                         existingProduct.currency = row.ParaBirimi || existingProduct.currency;
+                        existingProduct.isFeatured = isFeat;
                         updatedCount++;
                     } else {
-                        // Yeni Ekle
                         db.products.push({
                             id: Date.now() + Math.floor(Math.random() * 1000),
                             name: row.Ad,
@@ -727,7 +773,8 @@
                             currency: row.ParaBirimi || "TRY",
                             stock: row.Stok || 0,
                             img: row.Resim || "https://placehold.co/300",
-                            desc: row.Aciklama || ""
+                            desc: row.Aciklama || "",
+                            isFeatured: isFeat
                         });
                         newCount++;
                     }
@@ -735,12 +782,19 @@
 
                 saveDB();
                 toastr.success(`${newCount} Yeni ürün eklendi, ${updatedCount} ürün güncellendi.`);
-                adminRoute('products'); // Listeyi yenile
+                adminRoute('products'); 
             };
             reader.readAsArrayBuffer(file);
         }
 
-        function openProductModal() { document.getElementById('prod-modal').classList.remove('hidden'); document.getElementById('prod-modal').classList.add('flex'); editingProductId = null; document.getElementById('modal-title').innerText = "Yeni Ürün Ekle"; ['p-name','p-brand','p-price','p-stock','p-img','p-desc'].forEach(id => document.getElementById(id).value = ''); }
+        function openProductModal() { 
+            document.getElementById('prod-modal').classList.remove('hidden'); 
+            document.getElementById('prod-modal').classList.add('flex'); 
+            editingProductId = null; 
+            document.getElementById('modal-title').innerText = "Yeni Ürün Ekle"; 
+            ['p-name','p-brand','p-price','p-stock','p-img','p-desc'].forEach(id => document.getElementById(id).value = ''); 
+            document.getElementById('p-featured').checked = false;
+        }
         function closeProductModal() { document.getElementById('prod-modal').classList.add('hidden'); document.getElementById('prod-modal').classList.remove('flex'); }
         function saveProduct() {
             const name = document.getElementById('p-name').value;
@@ -751,11 +805,13 @@
             const cat = document.getElementById('p-cat').value;
             const img = document.getElementById('p-img').value || 'https://placehold.co/300';
             const desc = document.getElementById('p-desc').value;
+            const isFeat = document.getElementById('p-featured').checked;
+
             if(!name || !price) { toastr.error("Ad ve Fiyat zorunlu."); return; }
             if(editingProductId) {
                 const idx = db.products.findIndex(p => p.id === editingProductId);
-                db.products[idx] = { ...db.products[idx], name, brand, basePrice: price, currency: curr, stock, category: cat, img, desc };
-            } else { db.products.push({ id: Date.now(), name, brand, basePrice: price, currency: curr, stock, category: cat, img, desc }); }
+                db.products[idx] = { ...db.products[idx], name, brand, basePrice: price, currency: curr, stock, category: cat, img, desc, isFeatured: isFeat };
+            } else { db.products.push({ id: Date.now(), name, brand, basePrice: price, currency: curr, stock, category: cat, img, desc, isFeatured: isFeat }); }
             saveDB(); closeProductModal(); adminRoute('products');
         }
         function editProduct(id) {
@@ -763,6 +819,7 @@
             document.getElementById('p-name').value = p.name; document.getElementById('p-cat').value = p.category; document.getElementById('p-brand').value = p.brand;
             document.getElementById('p-price').value = p.basePrice; document.getElementById('p-curr').value = p.currency; document.getElementById('p-stock').value = p.stock;
             document.getElementById('p-img').value = p.img; document.getElementById('p-desc').value = p.desc;
+            document.getElementById('p-featured').checked = p.isFeatured || false;
         }
         function deleteProduct(id) { if(confirm("Silmek istediğinize emin misiniz?")) { db.products = db.products.filter(p => p.id !== id); saveDB(); adminRoute('products'); } }
 
