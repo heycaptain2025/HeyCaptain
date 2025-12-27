@@ -15,15 +15,15 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Global Değişkenler
         window.dbData = { products: [], banners: [], categories: [], messages: [], settings: {} };
         window.currentUserId = localStorage.getItem('marin_uid') || 'user_' + Math.random().toString(36).substr(2, 9);
-        localStorage.setItem('marin_uid', window.currentUserId); // ID'yi sabitle
+        localStorage.setItem('marin_uid', window.currentUserId);
 
-        // Firebase Configuration (Sizin Projeniz)
+        // --- SİZİN FIREBASE PROJE AYARLARINIZ ---
         const firebaseConfig = {
             apiKey: "AIzaSyDQOMYDJ-MzdYRgs_6eaCRoZi7DFg80wuw",
             authDomain: "marinekipman-978e5.firebaseapp.com",
@@ -34,32 +34,26 @@
             measurementId: "G-4CS6WRWXZE"
         };
         
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app); // Analytics Başlatıldı
+        const analytics = getAnalytics(app);
         const auth = getAuth(app);
         const db = getFirestore(app);
         
-        // Veritabanı için sabit bir ID kullanıyoruz (Verilerin karışmaması için)
+        // Veritabanı içinde veri karışıklığını önlemek için ana koleksiyon yolu
         const firestoreAppId = 'marinekipman-store-v1';
-
-        // Koleksiyon Yolları
         const getColl = (name) => collection(db, 'artifacts', firestoreAppId, 'public', 'data', name);
 
-        // Auth Başlatma
+        // --- KİMLİK DOĞRULAMA (DÜZELTİLDİ) ---
         const initAuth = async () => {
             try {
-                // Mevcut bir token varsa (Canvas ortamı için) veya Anonim giriş
-                if (typeof window.__initial_auth_token !== 'undefined' && window.__initial_auth_token) {
-                    await signInWithCustomToken(auth, window.__initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-                console.log("Firebase Bağlantısı Başarılı");
+                // Custom Token kontrolünü kaldırdık çünkü kendi projenizi kullanıyorsunuz.
+                // Doğrudan Anonim Giriş yapıyoruz.
+                await signInAnonymously(auth);
+                console.log("Firebase Bağlantısı Başarılı (Anonim)");
                 initListeners();
             } catch (error) {
                 console.error("Auth Hatası:", error);
-                toastr.error("Bağlantı kurulamadı. Lütfen Firebase Console'dan Anonymous girişi açtığınızdan emin olun.");
+                toastr.error("Bağlantı hatası: Lütfen Firebase Konsolunda 'Anonymous' girişi etkinleştirdiğinizden emin olun.");
             }
         };
         initAuth();
@@ -70,7 +64,7 @@
             onSnapshot(getColl('products'), (snap) => {
                 window.dbData.products = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 // JS tarafında ID'ye göre sırala (yeni eklenen üstte)
-                window.dbData.products.sort((a,b) => (b.id || 0) - (a.id || 0));
+                window.dbData.products.sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
                 
                 if(window.appReady) router(currentRoute);
             }, (err) => console.error("Ürünler yüklenirken hata:", err));
@@ -121,6 +115,7 @@
                     await updateDoc(doc(db, 'artifacts', firestoreAppId, 'public', 'data', 'products', prod.firebaseId), prod);
                     toastr.success("Ürün Güncellendi");
                 } else {
+                    prod.createdAt = Date.now(); // Sıralama için
                     await addDoc(getColl('products'), prod);
                     toastr.success("Ürün Eklendi");
                 }
@@ -176,7 +171,7 @@
                         'marine-light': '#0088cc',
                         'marine-accent': '#FF6B00',
                         'marine-accent-hover': '#e65a00',
-                        'gray-bg': '#f3f4f6'
+                        'gray-bg': '#f9fafb'
                     },
                     fontFamily: {
                         'sans': ['Montserrat', 'sans-serif']
@@ -188,7 +183,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
-        body { font-family: 'Montserrat', sans-serif; background-color: #f3f4f6; overflow-x: hidden; }
+        body { font-family: 'Montserrat', sans-serif; background-color: #f9fafb; overflow-x: hidden; }
+        
+        /* Header Curve */
         .header-curve {
             position: absolute; bottom: -40px; left: 0; width: 100%; height: 80px;
             background-color: #002B49; border-bottom-left-radius: 50% 40px; border-bottom-right-radius: 50% 40px;
@@ -198,12 +195,21 @@
             position: absolute; bottom: -60px; left: 50%; transform: translateX(-50%);
             width: 140px; height: 140px; background: white; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 20; border: 4px solid #f3f4f6;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 20; border: 4px solid #f9fafb;
             transition: transform 0.3s ease;
         }
         .logo-area:hover { transform: translateX(-50%) scale(1.05); }
-        .product-card { transition: all 0.3s ease; background: white; border: 1px solid #e5e7eb; }
-        .product-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); border-color: #005F88; }
+
+        /* Modern Card */
+        .product-card { 
+            background: white; border-radius: 16px; overflow: hidden; transition: all 0.3s ease; 
+            border: 1px solid #f3f4f6;
+        }
+        .product-card:hover { 
+            transform: translateY(-8px); 
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); 
+            border-color: #0088cc;
+        }
         
         /* Chat Widget */
         .chat-widget-btn {
@@ -224,28 +230,29 @@
         
         .fade-anim { animation: fadeEffect 1s; }
         @keyframes fadeEffect { from {opacity: .4} to {opacity: 1} }
-        .discount-badge {
-            position: absolute; top: 10px; right: 10px; background: #FF6B00; color: white;
-            width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-weight: bold; font-size: 12px; transform: rotate(15deg); z-index: 5; box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-        }
         .featured-badge {
             position: absolute; top: 10px; left: 10px; 
-            background: linear-gradient(45deg, #002B49, #005F88);
-            color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold;
-            z-index: 5; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            background: rgba(0, 43, 73, 0.9); backdrop-filter: blur(4px);
+            color: white; padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: bold;
+            z-index: 5; box-shadow: 0 2px 4px rgba(0,0,0,0.2); text-transform: uppercase; letter-spacing: 0.5px;
         }
-        /* Admin Chat Listesi */
-        .user-list-item.active { background-color: #005F88; color: white; }
+        
+        /* Admin Mobile Menu */
+        .admin-sidebar { transition: transform 0.3s ease; }
+        @media (max-width: 768px) {
+            .admin-sidebar { transform: translateX(-100%); position: absolute; z-index: 50; height: 100%; }
+            .admin-sidebar.open { transform: translateX(0); }
+        }
     </style>
 </head>
-<body class="flex flex-col min-h-screen">
+<body class="flex flex-col min-h-screen text-gray-800">
 
     <!-- CLIENT APP -->
     <div id="client-app" class="flex-col flex min-h-screen">
         <header class="relative mb-24">
             <div class="bg-marine-dark pb-16 pt-4 text-white">
                 <div class="container mx-auto px-4">
+                    <!-- Top Bar -->
                     <div class="flex flex-col md:flex-row justify-between items-center border-b border-white/10 pb-3 mb-4 text-xs md:text-sm">
                         <div class="flex items-center gap-4">
                             <div class="flex items-center bg-white/10 px-3 py-1 rounded-full backdrop-blur-sm border border-white/10">
@@ -258,10 +265,11 @@
                             </div>
                         </div>
                         <div class="flex gap-4 mt-2 md:mt-0">
-                            <a href="mailto:info@marinekipman.com" class="hover:text-marine-accent transition"><i class="fa-regular fa-envelope mr-1"></i> Destek</a>
-                            <button onclick="toggleAdminPanel()" class="hover:text-marine-accent transition font-bold"><i class="fa-solid fa-lock mr-1"></i> Bayi/Admin</button>
+                            <a href="mailto:info@marinekipman.com" class="hover:text-marine-accent transition"><i class="fa-regular fa-envelope mr-1"></i> info@marinekipman.com</a>
+                            <button onclick="toggleAdminPanel()" class="hover:text-marine-accent transition font-bold"><i class="fa-solid fa-lock mr-1"></i> Giriş</button>
                         </div>
                     </div>
+                    <!-- Nav & Search -->
                     <div class="flex flex-col md:flex-row justify-between items-center gap-4">
                         <nav class="flex gap-6 font-bold tracking-wide text-sm">
                             <a href="#" onclick="router('home')" class="hover:text-marine-accent transition py-2 border-b-2 border-transparent hover:border-marine-accent">ANA SAYFA</a>
@@ -270,9 +278,9 @@
                         </nav>
                         <div class="flex items-center gap-4 w-full md:w-auto justify-end">
                             <div class="relative group w-full md:w-64">
-                                <input type="text" placeholder="Ürün ara..." onkeyup="handleSearch(this.value)" class="w-full bg-white/10 border border-transparent focus:border-marine-accent focus:bg-white focus:text-marine-dark rounded-full px-4 py-2 text-sm transition outline-none placeholder-gray-400">
+                                <input type="text" placeholder="Ürün ara..." onkeyup="handleSearch(this.value)" class="w-full bg-white/10 border border-transparent focus:border-marine-accent focus:bg-white focus:text-marine-dark rounded-full px-4 py-2 text-sm transition outline-none placeholder-gray-400 text-white">
                                 <i class="fa-solid fa-search absolute right-3 top-2.5 text-gray-400"></i>
-                                <div id="search-results" class="absolute top-full left-0 w-full bg-white text-marine-dark mt-2 rounded-lg shadow-xl z-50 hidden max-h-60 overflow-y-auto"></div>
+                                <div id="search-results" class="absolute top-full left-0 w-full bg-white text-marine-dark mt-2 rounded-lg shadow-xl z-50 hidden max-h-60 overflow-y-auto border border-gray-100"></div>
                             </div>
                             <div onclick="router('cart')" class="relative cursor-pointer group">
                                 <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-marine-dark group-hover:bg-marine-accent group-hover:text-white transition shadow-lg">
@@ -295,14 +303,22 @@
         </header>
 
         <main id="main-content" class="flex-grow container mx-auto px-4 pb-12">
-            <div class="flex items-center justify-center h-64 text-gray-500">
-                <i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Veriler Buluttan Yükleniyor...
+            <div class="flex flex-col items-center justify-center h-64 text-gray-400">
+                <i class="fa-solid fa-circle-notch fa-spin text-3xl mb-4 text-marine-accent"></i>
+                <span>Yükleniyor...</span>
             </div>
         </main>
 
         <footer class="bg-marine-dark text-white pt-16 pb-8 border-t-4 border-marine-accent mt-auto">
-            <div class="container mx-auto px-4 text-center text-xs text-gray-500">
-                &copy; 2025 MarinEkipman. Tüm hakları saklıdır.
+            <div class="container mx-auto px-4">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-400">
+                    <div>&copy; 2025 MarinEkipman. Tüm hakları saklıdır.</div>
+                    <div class="flex gap-4">
+                        <a href="#" class="hover:text-white"><i class="fa-brands fa-instagram"></i></a>
+                        <a href="#" class="hover:text-white"><i class="fa-brands fa-facebook"></i></a>
+                        <a href="#" class="hover:text-white"><i class="fa-brands fa-linkedin"></i></a>
+                    </div>
+                </div>
             </div>
         </footer>
 
@@ -318,9 +334,7 @@
                 </div>
                 <button onclick="toggleChat()" class="hover:text-gray-300"><i class="fa-solid fa-times"></i></button>
             </div>
-            <div id="chat-messages" class="flex-grow bg-gray-50 p-4 overflow-y-auto space-y-3">
-                <!-- Chat Mesajları -->
-            </div>
+            <div id="chat-messages" class="flex-grow bg-gray-50 p-4 overflow-y-auto space-y-3"></div>
             <div class="p-3 border-t bg-white flex gap-2">
                 <input id="chat-input" type="text" placeholder="Mesajınız..." class="flex-grow border rounded-full px-4 py-2 text-sm focus:outline-none focus:border-marine-blue" onkeypress="if(event.key==='Enter') sendUserMessage()">
                 <button onclick="sendUserMessage()" class="bg-marine-accent text-white w-10 h-10 rounded-full hover:bg-marine-accent-hover transition flex items-center justify-center"><i class="fa-solid fa-paper-plane"></i></button>
@@ -330,15 +344,20 @@
 
     <!-- ADMIN APP -->
     <div id="admin-app" class="fixed inset-0 bg-gray-900 z-[100] hidden flex">
-        <aside class="w-64 bg-gray-800 border-r border-gray-700 flex flex-col text-white">
+        <!-- Mobile Toggle -->
+        <button onclick="toggleAdminSidebar()" class="absolute top-4 left-4 z-50 text-white md:hidden bg-gray-800 p-2 rounded">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+
+        <aside id="admin-sidebar" class="admin-sidebar w-64 bg-gray-800 border-r border-gray-700 flex flex-col text-white pt-12 md:pt-0">
             <div class="p-6 border-b border-gray-700">
                 <h2 class="text-2xl font-black text-marine-accent">YÖNETİM</h2>
-                <p class="text-xs text-gray-400">Firebase v3.0 Online</p>
+                <p class="text-xs text-gray-400">Firebase v3.1</p>
             </div>
             <nav class="flex-grow p-4 space-y-2">
                 <button onclick="adminRoute('dashboard')" class="w-full text-left p-3 rounded hover:bg-gray-700 flex items-center gap-3"><i class="fa-solid fa-chart-line w-5"></i> Özet</button>
                 <button onclick="adminRoute('products')" class="w-full text-left p-3 rounded hover:bg-gray-700 flex items-center gap-3"><i class="fa-solid fa-box w-5"></i> Ürünler & Excel</button>
-                <button onclick="adminRoute('slider')" class="w-full text-left p-3 rounded hover:bg-gray-700 flex items-center gap-3"><i class="fa-solid fa-images w-5"></i> Slider (Vitrin)</button>
+                <button onclick="adminRoute('slider')" class="w-full text-left p-3 rounded hover:bg-gray-700 flex items-center gap-3"><i class="fa-solid fa-images w-5"></i> Slider</button>
                 <button onclick="adminRoute('messages')" class="w-full text-left p-3 rounded hover:bg-gray-700 flex items-center gap-3 relative">
                     <i class="fa-solid fa-comments w-5"></i> Canlı Sohbet
                 </button>
@@ -347,7 +366,7 @@
             </nav>
         </aside>
 
-        <main class="flex-grow bg-gray-900 text-white p-8 overflow-y-auto">
+        <main onclick="closeAdminSidebarOnMobile()" class="flex-grow bg-gray-900 text-white p-8 overflow-y-auto w-full">
             <div id="admin-login" class="fixed inset-0 bg-gray-900 z-[110] flex items-center justify-center">
                 <div class="bg-gray-800 p-8 rounded-xl shadow-2xl w-96 border border-gray-700 text-center">
                     <i class="fa-solid fa-user-shield text-5xl text-marine-accent mb-4"></i>
@@ -366,12 +385,13 @@
     
     <script>
         // --- 1. CONFIG & STATE ---
-        let db = { cart: [] }; // Local DB for cart ONLY. Products etc comes from Window.dbData (Firebase)
+        let db = { cart: [] }; 
         let activeCurrency = "TRY";
         let rates = { TRY: 1, USD: 35.5, EUR: 37.2 };
         let currentRoute = 'home';
         let adminChatSelectedUser = null;
         let editingProductId = null;
+        let currentSort = 'newest'; // newest, priceAsc, priceDesc
 
         // --- 2. CORE FUNCTIONS ---
         function getProducts() { return window.dbData && window.dbData.products ? window.dbData.products : []; }
@@ -388,14 +408,11 @@
 
         function getProductPrice(p) {
             let baseTRY = 0;
-            // Güvenlik kontrolü
-            if(!p || !p.basePrice) return { baseTRY:0, finalTRY:0, discountRate:0, isDiscounted:false };
-
+            if(!p || !p.basePrice) return { baseTRY:0, finalTRY:0 };
             if(p.currency === "TRY") baseTRY = parseFloat(p.basePrice);
             else if(p.currency === "USD") baseTRY = parseFloat(p.basePrice) * rates.USD;
             else if(p.currency === "EUR") baseTRY = parseFloat(p.basePrice) * rates.EUR;
-
-            return { baseTRY: baseTRY, finalTRY: baseTRY, discountRate: 0, isDiscounted: false };
+            return { baseTRY: baseTRY, finalTRY: baseTRY };
         }
 
         // --- 3. ROUTER ---
@@ -403,8 +420,6 @@
             currentRoute = page;
             const mainEl = document.getElementById('main-content');
             window.scrollTo(0,0);
-            
-            // Veriler henüz yüklenmediyse bekle
             if(!window.dbData || !window.dbData.products) return;
 
             if(page === 'home') renderHome(mainEl);
@@ -424,19 +439,24 @@
                 <div class="relative w-full h-[300px] md:h-[450px] rounded-2xl overflow-hidden shadow-2xl mb-12 group border border-gray-200">
                     ${banners.map((b, index) => `
                         <div class="absolute inset-0 fade-anim ${index !== 0 ? 'hidden' : ''}" id="slide-${index}">
-                            <img src="${b.img}" onerror="this.src='https://placehold.co/1200x600?text=Resim+Yok'" class="w-full h-full object-cover">
+                            <img src="${b.img}" onerror="this.src='https://placehold.co/1200x600?text=Görsel+Yok'" class="w-full h-full object-cover">
                             <div class="absolute inset-0 bg-gradient-to-t from-marine-dark/90 to-transparent flex flex-col justify-end p-8 md:p-16">
-                                <h2 class="text-3xl md:text-5xl font-bold text-white mb-2 drop-shadow-md">${b.title}</h2>
-                                <p class="text-gray-200 text-lg md:text-xl mb-6 drop-shadow">${b.sub}</p>
-                                <button onclick="router('products')" class="w-fit bg-marine-accent text-white px-8 py-3 rounded font-bold hover:bg-white hover:text-marine-accent transition shadow-lg">İNCELE</button>
+                                <h2 class="text-3xl md:text-5xl font-bold text-white mb-2 drop-shadow-md tracking-tight">${b.title}</h2>
+                                <p class="text-gray-200 text-lg md:text-xl mb-6 drop-shadow font-light">${b.sub}</p>
+                                <button onclick="router('products')" class="w-fit bg-marine-accent text-white px-8 py-3 rounded-lg font-bold hover:bg-white hover:text-marine-accent transition shadow-lg transform hover:-translate-y-1">İNCELE</button>
                             </div>
                         </div>
                     `).join('')}
-                    <button onclick="changeSlide(-1)" class="absolute left-4 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm transition"><i class="fa-solid fa-chevron-left"></i></button>
-                    <button onclick="changeSlide(1)" class="absolute right-4 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm transition"><i class="fa-solid fa-chevron-right"></i></button>
+                    <button onclick="changeSlide(-1)" class="absolute left-4 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/50 text-white w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm transition"><i class="fa-solid fa-chevron-left"></i></button>
+                    <button onclick="changeSlide(1)" class="absolute right-4 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/50 text-white w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm transition"><i class="fa-solid fa-chevron-right"></i></button>
                 </div>`;
             } else {
-                sliderHtml = `<div class="w-full h-64 bg-gray-200 rounded-xl flex items-center justify-center text-gray-500 mb-12">Slider görselleri admin panelinden eklenebilir.</div>`;
+                sliderHtml = `<div class="w-full h-64 bg-gradient-to-r from-marine-dark to-marine-blue rounded-xl flex items-center justify-center text-white mb-12 shadow-inner">
+                    <div class="text-center">
+                        <h2 class="text-2xl font-bold mb-2">Hoş Geldiniz</h2>
+                        <p class="opacity-70">Admin panelinden slider görseli ekleyebilirsiniz.</p>
+                    </div>
+                </div>`;
             }
 
             const products = getProducts();
@@ -450,32 +470,67 @@
                     <a href="#" onclick="router('products')" class="text-sm font-bold text-marine-blue hover:underline">Tümünü Gör</a>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    ${featured.length > 0 ? featured.map(p => createProductCard(p)).join('') : '<div class="col-span-4 text-center py-10">Ürün bulunamadı.</div>'}
+                    ${featured.length > 0 ? featured.map(p => createProductCard(p)).join('') : '<div class="col-span-4 text-center py-10 bg-white rounded-lg shadow-sm">Henüz öne çıkan ürün yok.</div>'}
                 </div>`;
             startSliderInterval();
         }
 
         function renderProducts(el, category = 'all') {
-            const products = getProducts();
-            const filtered = category === 'all' ? products : products.filter(p => p.category === category);
+            let products = [...getProducts()];
+            
+            // Filtreleme
+            if(category !== 'all') {
+                products = products.filter(p => p.category === category);
+            }
+
+            // Sıralama Logic
+            if (currentSort === 'priceAsc') {
+                products.sort((a, b) => getProductPrice(a).finalTRY - getProductPrice(b).finalTRY);
+            } else if (currentSort === 'priceDesc') {
+                products.sort((a, b) => getProductPrice(b).finalTRY - getProductPrice(a).finalTRY);
+            } else if (currentSort === 'newest') {
+                products.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+            }
+
             const categories = ["all", ...getCategories()];
             
             el.innerHTML = `
-                <div class="bg-marine-dark text-white p-8 rounded-xl mb-8 flex justify-between items-center bg-[url('https://images.unsplash.com/photo-1471922694854-ff1b63b20054?w=1200')] bg-cover bg-center relative overflow-hidden">
-                    <div class="absolute inset-0 bg-marine-dark/80"></div>
-                    <div class="relative z-10"><h1 class="text-3xl font-bold mb-2">Ürün Kataloğu</h1></div>
+                <div class="bg-marine-dark text-white p-8 rounded-xl mb-8 flex justify-between items-center relative overflow-hidden shadow-lg">
+                    <div class="absolute inset-0 opacity-20 bg-[url('https://images.unsplash.com/photo-1471922694854-ff1b63b20054?w=1200')] bg-cover bg-center"></div>
+                    <div class="relative z-10"><h1 class="text-3xl font-bold mb-2">Ürün Kataloğu</h1><p class="text-white/70 text-sm">Denizcilik ekipmanlarında en geniş seçenekler.</p></div>
                 </div>
                 <div class="flex flex-col md:flex-row gap-8">
+                    <!-- Sidebar -->
                     <div class="w-full md:w-1/4">
-                        <div class="bg-white p-4 rounded-lg shadow sticky top-4">
-                            <h4 class="font-bold border-b pb-2 mb-3">Kategoriler</h4>
-                            <ul class="space-y-1">
-                                ${categories.map(c => `<li onclick="router('products', '${c}')" class="cursor-pointer px-2 py-1.5 rounded hover:bg-gray-100 flex justify-between ${category===c?'bg-marine-accent text-white font-bold':''}">${c==='all'?'Tümü':c}</li>`).join('')}
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 sticky top-4">
+                            <h4 class="font-bold border-b pb-3 mb-4 text-marine-dark">Kategoriler</h4>
+                            <ul class="space-y-2">
+                                ${categories.map(c => `
+                                    <li onclick="router('products', '${c}')" class="cursor-pointer px-3 py-2 rounded-lg transition flex justify-between items-center ${category===c?'bg-marine-accent text-white font-bold shadow-md':'text-gray-600 hover:bg-gray-50'}">
+                                        <span>${c==='all'?'Tümü':c}</span>
+                                        ${category===c ? '<i class="fa-solid fa-check text-xs"></i>' : ''}
+                                    </li>`).join('')}
                             </ul>
                         </div>
                     </div>
-                    <div class="w-full md:w-3/4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                        ${filtered.length > 0 ? filtered.map(p => createProductCard(p)).join('') : '<div>Ürün yok.</div>'}
+                    
+                    <!-- Grid & Sort -->
+                    <div class="w-full md:w-3/4">
+                        <div class="flex justify-between items-center mb-6 bg-white p-3 rounded-lg shadow-sm border border-gray-100">
+                            <span class="text-sm text-gray-500 font-bold ml-2">${products.length} Ürün Listelendi</span>
+                            <select onchange="changeSort(this.value)" class="bg-gray-50 border border-gray-200 text-sm rounded-lg px-3 py-2 outline-none focus:border-marine-accent">
+                                <option value="newest" ${currentSort==='newest'?'selected':''}>En Yeniler</option>
+                                <option value="priceAsc" ${currentSort==='priceAsc'?'selected':''}>Fiyat (Artan)</option>
+                                <option value="priceDesc" ${currentSort==='priceDesc'?'selected':''}>Fiyat (Azalan)</option>
+                            </select>
+                        </div>
+
+                        ${products.length === 0 ? 
+                            '<div class="text-center py-20 bg-white rounded-xl border border-dashed border-gray-300 text-gray-400">Bu kategoride ürün bulunamadı.</div>' : 
+                            `<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                ${products.map(p => createProductCard(p)).join('')}
+                            </div>`
+                        }
                     </div>
                 </div>`;
         }
@@ -483,17 +538,19 @@
         function createProductCard(p) {
             const price = getProductPrice(p);
             return `
-            <div class="product-card rounded-lg overflow-hidden flex flex-col h-full group relative">
-                ${p.isFeatured ? '<div class="featured-badge"><i class="fa-solid fa-star text-yellow-400"></i></div>' : ''}
-                <div class="h-48 p-4 flex items-center justify-center cursor-pointer bg-white" onclick="router('detail', '${p.id}')">
-                    <img src="${p.img}" onerror="this.src='https://placehold.co/300?text=Resim'" class="max-h-full max-w-full object-contain group-hover:scale-105 transition">
+            <div class="product-card group relative flex flex-col h-full">
+                ${p.isFeatured ? '<div class="featured-badge"><i class="fa-solid fa-star text-yellow-400 mr-1"></i> Vitrin</div>' : ''}
+                <div class="h-56 p-6 flex items-center justify-center cursor-pointer bg-white relative overflow-hidden" onclick="router('detail', '${p.id}')">
+                    <img src="${p.img}" onerror="this.src='https://placehold.co/300?text=Resim'" class="max-h-full max-w-full object-contain group-hover:scale-110 transition duration-500">
                 </div>
-                <div class="p-4 border-t flex-grow flex flex-col bg-white">
-                    <div class="text-[10px] text-gray-400 font-bold uppercase">${p.brand}</div>
-                    <h3 class="font-bold text-marine-dark text-sm mb-2 line-clamp-2 cursor-pointer" onclick="router('detail', '${p.id}')">${p.name}</h3>
-                    <div class="mt-auto flex justify-between items-end">
-                        <div class="text-lg font-bold text-marine-blue">${formatMoney(price.finalTRY)}</div>
-                        <button onclick="addToCart('${p.id}')" class="w-8 h-8 rounded bg-gray-100 hover:bg-marine-accent hover:text-white flex items-center justify-center"><i class="fa-solid fa-plus"></i></button>
+                <div class="p-5 border-t border-gray-100 flex-grow flex flex-col bg-white">
+                    <div class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">${p.brand}</div>
+                    <h3 class="font-bold text-marine-dark text-sm mb-2 line-clamp-2 cursor-pointer hover:text-marine-accent transition" onclick="router('detail', '${p.id}')">${p.name}</h3>
+                    <div class="mt-auto flex justify-between items-end pt-4">
+                        <div class="text-xl font-bold text-marine-blue">${formatMoney(price.finalTRY)}</div>
+                        <button onclick="addToCart('${p.id}')" class="w-10 h-10 rounded-full bg-gray-50 text-marine-dark hover:bg-marine-accent hover:text-white flex items-center justify-center transition shadow-sm border border-gray-200">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
                     </div>
                 </div>
             </div>`;
@@ -504,50 +561,135 @@
             if(!p) return router('products');
             const price = getProductPrice(p);
 
+            // Related Products Logic
+            const related = getProducts()
+                .filter(prod => prod.category === p.category && prod.id !== p.id)
+                .slice(0, 3); // Max 3 ürün
+
             el.innerHTML = `
-                <div class="flex flex-col lg:flex-row gap-8 bg-white p-6 md:p-10 rounded-xl shadow-lg border border-gray-100">
-                    <div class="w-full lg:w-1/2 flex items-center justify-center border rounded-lg p-8 bg-white">
-                        <img src="${p.img}" class="max-h-[400px] object-contain">
+                <div class="flex flex-col lg:flex-row gap-10 bg-white p-8 md:p-12 rounded-2xl shadow-lg border border-gray-100 mb-12">
+                    <div class="w-full lg:w-1/2 flex items-center justify-center border rounded-xl p-10 bg-white relative group">
+                        <img src="${p.img}" onerror="this.src='https://placehold.co/400?text=Resim'" class="max-h-[400px] object-contain group-hover:scale-105 transition duration-500">
                     </div>
                     <div class="w-full lg:w-1/2 flex flex-col">
-                        <h1 class="text-3xl font-bold text-marine-dark mb-4">${p.name}</h1>
-                        <div class="text-4xl font-bold text-marine-blue mb-6">${formatMoney(price.finalTRY)}</div>
-                        <p class="text-gray-600 mb-8">${p.desc}</p>
-                        <button onclick="addToCart('${p.id}')" class="w-full bg-marine-dark text-white py-4 rounded-lg font-bold hover:bg-marine-accent transition">TEKLİF LİSTESİNE EKLE</button>
+                        <div class="mb-4">
+                            <span class="bg-blue-50 text-marine-blue px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide">${p.category}</span>
+                        </div>
+                        <h1 class="text-3xl md:text-4xl font-black text-marine-dark mb-6 leading-tight">${p.name}</h1>
+                        <div class="text-5xl font-bold text-marine-blue mb-8 tracking-tight">${formatMoney(price.finalTRY)} <span class="text-sm text-gray-400 font-normal ml-2 align-middle">+ KDV</span></div>
+                        
+                        <div class="prose text-gray-600 mb-8 leading-relaxed text-sm bg-gray-50 p-4 rounded-lg border border-gray-100">
+                            <h4 class="font-bold text-marine-dark mb-2">Ürün Açıklaması</h4>
+                            <p>${p.desc || "Açıklama bulunmuyor."}</p>
+                        </div>
+                        
+                        <button onclick="addToCart('${p.id}')" class="w-full bg-marine-dark text-white py-4 rounded-xl font-bold hover:bg-marine-accent transition shadow-xl hover:shadow-2xl transform active:scale-95 text-lg flex items-center justify-center gap-3">
+                            <i class="fa-solid fa-cart-plus"></i> TEKLİF LİSTESİNE EKLE
+                        </button>
                     </div>
-                </div>`;
+                </div>
+
+                <!-- Related Products Section -->
+                ${related.length > 0 ? `
+                <div class="mt-16">
+                    <h3 class="text-xl font-bold text-marine-dark mb-6 border-b pb-2">Bunları da Beğenebilirsiniz</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                        ${related.map(r => createProductCard(r)).join('')}
+                    </div>
+                </div>` : ''}
+                `;
         }
 
         function renderCart(el) {
-            if(db.cart.length === 0) { el.innerHTML = `<div class="text-center py-20">Listeniz boş. <button onclick="router('products')" class="text-marine-accent underline">Ürünlere Git</button></div>`; return; }
+            if(db.cart.length === 0) { 
+                el.innerHTML = `
+                <div class="text-center py-24 bg-white rounded-2xl shadow-sm border border-gray-100">
+                    <div class="bg-gray-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fa-solid fa-basket-shopping text-4xl text-gray-300"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-marine-dark mb-2">Listeniz Boş</h2>
+                    <p class="text-gray-500 mb-8">Henüz teklif listesine bir ürün eklemediniz.</p>
+                    <button onclick="router('products')" class="bg-marine-accent text-white px-8 py-3 rounded-lg font-bold hover:bg-orange-600 transition shadow-lg">Ürünlere Git</button>
+                </div>`; 
+                return; 
+            }
             const itemsHtml = db.cart.map((item, idx) => {
                 const price = getProductPrice(item);
-                return `<div class="flex items-center gap-4 border-b py-4"><img src="${item.img}" class="w-16 h-16 object-contain"><div class="flex-grow"><div class="font-bold">${item.name}</div><div class="text-marine-blue">${formatMoney(price.finalTRY)}</div></div><button onclick="removeFromCart(${idx})" class="text-red-500">Sil</button></div>`;
+                return `
+                <div class="flex items-center gap-4 border-b border-gray-100 py-4 last:border-0 hover:bg-gray-50 transition p-2 rounded-lg">
+                    <img src="${item.img}" class="w-20 h-20 object-contain bg-white border rounded-lg p-1">
+                    <div class="flex-grow">
+                        <div class="text-xs text-gray-500 font-bold uppercase mb-1">${item.brand}</div>
+                        <div class="font-bold text-marine-dark text-sm md:text-base">${item.name}</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-bold text-marine-blue mb-1">${formatMoney(price.finalTRY)}</div>
+                        <button onclick="removeFromCart(${idx})" class="text-red-400 text-xs hover:text-red-600 font-bold hover:underline">Kaldır</button>
+                    </div>
+                </div>`;
             }).join('');
-            el.innerHTML = `<h1 class="text-2xl font-bold mb-6">Teklif Listeniz</h1><div class="bg-white p-6 rounded shadow">${itemsHtml}</div><div class="mt-6 bg-white p-6 rounded shadow"><h3 class="font-bold mb-4">Gönder</h3><input id="q-name" placeholder="Adınız" class="w-full border p-2 mb-2"><input id="q-phone" placeholder="Telefon" class="w-full border p-2 mb-2"><button onclick="sendQuoteEmail()" class="bg-marine-accent text-white px-6 py-3 rounded font-bold w-full">TEKLİF İSTE</button></div>`;
+            
+            el.innerHTML = `
+            <h1 class="text-3xl font-bold mb-8 text-marine-dark">Teklif Listeniz</h1>
+            <div class="flex flex-col lg:flex-row gap-8">
+                <div class="w-full lg:w-2/3 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                    ${itemsHtml}
+                </div>
+                <div class="w-full lg:w-1/3">
+                    <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 sticky top-4">
+                        <h3 class="font-bold text-lg mb-4 border-b pb-4 flex items-center gap-2"><i class="fa-solid fa-file-signature text-marine-accent"></i> Teklif Formu</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1">Ad Soyad</label>
+                                <input id="q-name" type="text" class="w-full bg-gray-50 border border-gray-200 p-3 rounded-lg text-sm focus:border-marine-accent outline-none transition">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1">Telefon</label>
+                                <input id="q-phone" type="text" class="w-full bg-gray-50 border border-gray-200 p-3 rounded-lg text-sm focus:border-marine-accent outline-none transition">
+                            </div>
+                            <button onclick="sendQuoteEmail()" class="w-full bg-marine-dark text-white py-4 rounded-xl font-bold mt-4 hover:bg-marine-accent transition shadow-lg flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-paper-plane"></i> TEKLİF İSTE
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
         }
 
         function renderContact(el) {
-            el.innerHTML = `<div class="bg-white p-10 rounded shadow text-center"><h2 class="text-2xl font-bold">İletişim</h2><p>info@marinekipman.com</p></div>`;
+            el.innerHTML = `<div class="bg-white p-12 rounded-2xl shadow-sm text-center max-w-2xl mx-auto border border-gray-100">
+                <div class="bg-blue-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 text-marine-blue text-3xl"><i class="fa-solid fa-headset"></i></div>
+                <h2 class="text-3xl font-bold text-marine-dark mb-4">Bize Ulaşın</h2>
+                <p class="text-gray-500 mb-8">Projeleriniz için özel çözümler sunuyoruz.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+                    <div class="p-4 border rounded-lg hover:border-marine-accent transition"><i class="fa-solid fa-envelope text-marine-accent mr-2"></i> info@marinekipman.com</div>
+                    <div class="p-4 border rounded-lg hover:border-marine-accent transition"><i class="fa-solid fa-phone text-marine-accent mr-2"></i> +90 212 555 0000</div>
+                </div>
+            </div>`;
         }
 
-        // --- 5. LOGIC (CART, SLIDER, CHAT) ---
+        // --- 5. LOGIC (CART, SLIDER, CHAT, SORT) ---
         function addToCart(id) {
             const p = getProducts().find(x => x.id == id);
-            if(p) { db.cart.push(p); updateCartBadge(); toastr.success("Eklendi"); }
+            if(p) { db.cart.push(p); updateCartBadge(); toastr.success("Ürün listeye eklendi"); }
         }
-        function removeFromCart(idx) { db.cart.splice(idx, 1); router('cart'); updateCartBadge(); }
+        function removeFromCart(idx) { db.cart.splice(idx, 1); renderCart(document.getElementById('main-content')); updateCartBadge(); toastr.info("Ürün çıkarıldı"); }
         function updateCartBadge() { document.getElementById('cart-badge').innerText = db.cart.length; }
         
+        function changeSort(val) {
+            currentSort = val;
+            renderProducts(document.getElementById('main-content')); // Yeniden render et
+        }
+
         function sendQuoteEmail() {
             const name = document.getElementById('q-name').value;
             const phone = document.getElementById('q-phone').value;
-            if(!name || !phone) { toastr.warning("Bilgileri giriniz"); return; }
-            let body = `Ad: ${name}%0D%0ATel: ${phone}%0D%0AÜrünler:%0D%0A` + db.cart.map(p => p.name).join('%0D%0A');
-            window.location.href = `mailto:info@marinekipman.com?subject=Teklif&body=${body}`;
+            if(!name || !phone) { toastr.warning("Lütfen iletişim bilgilerinizi giriniz."); return; }
+            let body = `MÜŞTERİ: ${name}%0D%0ATEL: ${phone}%0D%0A%0D%0AİSTENEN ÜRÜNLER:%0D%0A` + db.cart.map(p => `- ${p.name} (${p.brand})`).join('%0D%0A');
+            window.location.href = `mailto:info@marinekipman.com?subject=Teklif Talebi: ${name}&body=${body}`;
+            toastr.success("Mail uygulamanız açılıyor...");
         }
 
-        // Slider
         let slideIndex = 0; let slideInterval;
         function changeSlide(n) {
             const slides = document.querySelectorAll('[id^="slide-"]');
@@ -560,7 +702,6 @@
         }
         function startSliderInterval() { clearInterval(slideInterval); slideInterval = setInterval(() => changeSlide(1), 5000); }
 
-        // Chat
         function toggleChat() {
             const box = document.getElementById('chat-box');
             box.style.display = box.style.display === 'flex' ? 'none' : 'flex';
@@ -573,7 +714,7 @@
             const msgs = window.dbData.messages.filter(m => m.userId === window.currentUserId);
             area.innerHTML = msgs.map(m => `
                 <div class="flex flex-col ${m.from === 'user' ? 'items-end' : 'items-start'}">
-                    <div class="max-w-[85%] p-2 rounded-lg text-sm ${m.from === 'user' ? 'bg-marine-blue text-white rounded-br-none' : 'bg-white border text-gray-700 rounded-bl-none shadow-sm'}">
+                    <div class="max-w-[85%] p-3 rounded-2xl text-sm mb-2 shadow-sm ${m.from === 'user' ? 'bg-marine-blue text-white rounded-br-none' : 'bg-white border text-gray-700 rounded-bl-none'}">
                         ${m.text}
                     </div>
                 </div>`).join('');
@@ -583,7 +724,7 @@
         function sendUserMessage() {
             const txt = document.getElementById('chat-input').value.trim();
             if(!txt) return;
-            window.fbSendMessage(txt); // Firebase'e gönder
+            window.fbSendMessage(txt);
             document.getElementById('chat-input').value = '';
         }
 
@@ -591,7 +732,9 @@
             const r = document.getElementById('search-results');
             if(q.length < 2) { r.classList.add('hidden'); return; }
             const res = getProducts().filter(p => p.name.toLowerCase().includes(q.toLowerCase()));
-            r.innerHTML = res.map(p => `<div onclick="router('detail', '${p.id}'); document.getElementById('search-results').classList.add('hidden')" class="p-2 hover:bg-gray-100 cursor-pointer border-b">${p.name}</div>`).join('');
+            r.innerHTML = res.length > 0 
+                ? res.map(p => `<div onclick="router('detail', '${p.id}'); document.getElementById('search-results').classList.add('hidden')" class="p-3 hover:bg-gray-50 cursor-pointer border-b flex items-center gap-3 transition"><img src="${p.img}" class="w-8 h-8 object-contain"> <span class="font-bold text-sm">${p.name}</span></div>`).join('')
+                : '<div class="p-3 text-sm text-gray-500 text-center">Sonuç bulunamadı.</div>';
             r.classList.remove('hidden');
         }
 
@@ -611,12 +754,33 @@
                 toastr.success("Giriş Başarılı");
             } else toastr.error("Hatalı Şifre");
         }
+        
+        function toggleAdminSidebar() {
+            const sb = document.getElementById('admin-sidebar');
+            sb.classList.toggle('open');
+        }
+        function closeAdminSidebarOnMobile() {
+            const sb = document.getElementById('admin-sidebar');
+            if(window.innerWidth < 768) sb.classList.remove('open');
+        }
 
         function adminRoute(page) {
+            closeAdminSidebarOnMobile();
             const area = document.getElementById('admin-content-area');
             if(page === 'dashboard') {
                 const prodLen = getProducts().length;
-                area.innerHTML = `<h2 class="text-3xl font-bold mb-6">Özet</h2><div class="grid grid-cols-3 gap-6"><div class="bg-gray-800 p-6 rounded-xl border border-gray-700"><div class="text-gray-400">Ürün</div><div class="text-3xl font-bold">${prodLen}</div></div><div class="bg-gray-800 p-6 rounded-xl border border-gray-700"><div class="text-gray-400">Mesajlar</div><div class="text-3xl font-bold text-green-500">${window.dbData.messages.length}</div></div></div>`;
+                area.innerHTML = `
+                <h2 class="text-3xl font-bold mb-6">Genel Bakış</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 flex items-center justify-between">
+                        <div><div class="text-gray-400 text-sm">Toplam Ürün</div><div class="text-3xl font-bold text-white">${prodLen}</div></div>
+                        <i class="fa-solid fa-box text-marine-accent text-3xl opacity-50"></i>
+                    </div>
+                    <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 flex items-center justify-between">
+                        <div><div class="text-gray-400 text-sm">Mesajlar</div><div class="text-3xl font-bold text-green-500">${window.dbData.messages.length}</div></div>
+                        <i class="fa-solid fa-envelope text-green-500 text-3xl opacity-50"></i>
+                    </div>
+                </div>`;
             } else if(page === 'slider') {
                 renderAdminSlider(area);
             } else if(page === 'messages') {
@@ -630,17 +794,27 @@
         function renderAdminSlider(area) {
             const banners = getBanners();
             area.innerHTML = `
-                <h2 class="text-2xl font-bold mb-6">Slider Yönetimi (Firebase)</h2>
-                <div class="bg-gray-800 p-4 rounded mb-6 border border-gray-700">
-                    <div class="grid grid-cols-2 gap-4 mb-2">
-                        <input id="sl-title" placeholder="Başlık" class="bg-gray-700 border border-gray-600 p-2 rounded text-white">
-                        <input id="sl-sub" placeholder="Alt Başlık" class="bg-gray-700 border border-gray-600 p-2 rounded text-white">
-                        <input id="sl-img" placeholder="Resim URL" class="bg-gray-700 border border-gray-600 p-2 rounded text-white col-span-2">
+                <h2 class="text-2xl font-bold mb-6">Slider Yönetimi</h2>
+                <div class="bg-gray-800 p-6 rounded-xl mb-8 border border-gray-700">
+                    <h4 class="font-bold mb-4 text-marine-accent">Yeni Banner Ekle</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <input id="sl-title" placeholder="Başlık" class="bg-gray-700 border border-gray-600 p-3 rounded text-white outline-none focus:border-marine-accent">
+                        <input id="sl-sub" placeholder="Alt Başlık" class="bg-gray-700 border border-gray-600 p-3 rounded text-white outline-none focus:border-marine-accent">
+                        <input id="sl-img" placeholder="Resim URL (https://...)" class="bg-gray-700 border border-gray-600 p-3 rounded text-white col-span-2 outline-none focus:border-marine-accent">
                     </div>
-                    <button onclick="adminAddBanner()" class="bg-marine-accent px-4 py-2 rounded font-bold hover:bg-orange-600">Ekle</button>
+                    <button onclick="adminAddBanner()" class="bg-marine-accent px-6 py-3 rounded font-bold hover:bg-orange-600 w-full md:w-auto">Banner Ekle</button>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    ${banners.map(b => `<div class="relative group rounded-lg overflow-hidden border border-gray-600"><img src="${b.img}" class="w-full h-32 object-cover opacity-60"><div class="absolute bottom-0 left-0 p-2"><div class="font-bold">${b.title}</div></div><button onclick="window.fbDeleteBanner('${b.id}')" class="absolute top-2 right-2 bg-red-600 w-8 h-8 rounded"><i class="fa-solid fa-trash"></i></button></div>`).join('')}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    ${banners.map(b => `
+                        <div class="relative group rounded-xl overflow-hidden border border-gray-600 h-48">
+                            <img src="${b.img}" class="w-full h-full object-cover opacity-60">
+                            <div class="absolute bottom-0 left-0 p-4 w-full bg-gradient-to-t from-black/80 to-transparent">
+                                <div class="font-bold text-lg">${b.title}</div>
+                                <div class="text-xs text-gray-300">${b.sub}</div>
+                            </div>
+                            <button onclick="window.fbDeleteBanner('${b.id}')" class="absolute top-2 right-2 bg-red-600 text-white w-8 h-8 rounded flex items-center justify-center hover:bg-red-700 shadow-lg"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    `).join('')}
                 </div>`;
         }
         function adminAddBanner() {
@@ -652,7 +826,6 @@
 
         // Admin Chat
         function renderAdminMessages(area) {
-            // Grupla: userId'ye göre
             const groups = {};
             window.dbData.messages.forEach(m => {
                 if(!groups[m.userId]) groups[m.userId] = [];
@@ -662,90 +835,84 @@
 
             let listHtml = userIds.map(uid => {
                 const lastMsg = groups[uid][groups[uid].length-1];
-                const activeClass = uid === adminChatSelectedUser ? 'bg-marine-blue' : 'bg-gray-700 hover:bg-gray-600';
-                return `<div onclick="selectAdminChatUser('${uid}')" class="p-3 rounded cursor-pointer mb-2 ${activeClass}">
-                            <div class="font-bold text-xs text-gray-300">User: ${uid.substr(0,8)}...</div>
-                            <div class="text-sm truncate">${lastMsg.text}</div>
+                const activeClass = uid === adminChatSelectedUser ? 'bg-marine-blue border-l-4 border-marine-accent' : 'bg-gray-700 hover:bg-gray-600 border-l-4 border-transparent';
+                return `<div onclick="selectAdminChatUser('${uid}')" class="p-4 rounded-r cursor-pointer mb-2 ${activeClass} transition">
+                            <div class="font-bold text-xs text-gray-300 mb-1">Müşteri ID: ${uid.substr(0,6)}...</div>
+                            <div class="text-sm truncate text-white">${lastMsg.text}</div>
                         </div>`;
             }).join('');
 
-            let chatHtml = '<div class="text-gray-500 text-center mt-10">Kullanıcı seçiniz</div>';
+            let chatHtml = '<div class="text-gray-500 text-center mt-20 flex flex-col items-center"><i class="fa-regular fa-comments text-4xl mb-4"></i><span>Soldan bir sohbet seçin</span></div>';
             if(adminChatSelectedUser && groups[adminChatSelectedUser]) {
                 chatHtml = groups[adminChatSelectedUser].map(m => `
-                    <div class="flex flex-col ${m.from === 'admin' ? 'items-end' : 'items-start'} mb-2">
-                        <div class="p-2 rounded text-sm max-w-[80%] ${m.from === 'admin' ? 'bg-marine-blue' : 'bg-gray-600'}">
+                    <div class="flex flex-col ${m.from === 'admin' ? 'items-end' : 'items-start'} mb-3">
+                        <div class="p-3 rounded-lg text-sm max-w-[80%] ${m.from === 'admin' ? 'bg-marine-blue text-white' : 'bg-gray-700 text-white'}">
                             ${m.text}
                         </div>
-                        <span class="text-[10px] text-gray-400">${m.from}</span>
+                        <span class="text-[10px] text-gray-500 mt-1">${m.from}</span>
                     </div>
                 `).join('');
             }
 
             area.innerHTML = `
-                <div class="flex h-[500px] border border-gray-700 rounded bg-gray-800">
-                    <div class="w-1/3 border-r border-gray-700 p-4 overflow-y-auto">${listHtml}</div>
-                    <div class="w-2/3 flex flex-col">
-                        <div class="flex-grow p-4 overflow-y-auto" id="adm-chat-scroll">${chatHtml}</div>
-                        <div class="p-3 border-t border-gray-700 flex gap-2">
-                            <input id="adm-chat-in" class="flex-grow bg-gray-700 border border-gray-600 rounded p-2 text-white" placeholder="Cevap...">
-                            <button onclick="sendAdminReply()" class="bg-marine-accent px-4 py-2 rounded">Gönder</button>
+                <h2 class="text-2xl font-bold mb-6">Müşteri Sohbetleri</h2>
+                <div class="flex flex-col md:flex-row h-[600px] border border-gray-700 rounded-xl bg-gray-800 overflow-hidden shadow-2xl">
+                    <div class="w-full md:w-1/3 border-r border-gray-700 p-4 overflow-y-auto bg-gray-800/50">${listHtml}</div>
+                    <div class="w-full md:w-2/3 flex flex-col bg-gray-900">
+                        <div class="flex-grow p-6 overflow-y-auto" id="adm-chat-scroll">${chatHtml}</div>
+                        <div class="p-4 border-t border-gray-700 flex gap-3 bg-gray-800">
+                            <input id="adm-chat-in" class="flex-grow bg-gray-700 border border-gray-600 rounded-lg p-3 text-white outline-none focus:border-marine-accent" placeholder="Cevap yazın..." onkeypress="if(event.key==='Enter') sendAdminReply()">
+                            <button onclick="sendAdminReply()" class="bg-marine-accent px-6 py-3 rounded-lg font-bold hover:bg-orange-600 transition"><i class="fa-solid fa-paper-plane"></i></button>
                         </div>
                     </div>
                 </div>`;
             
-            const scroll = document.getElementById('adm-chat-scroll');
-            if(scroll) scroll.scrollTop = scroll.scrollHeight;
+            setTimeout(() => { const s = document.getElementById('adm-chat-scroll'); if(s) s.scrollTop = s.scrollHeight; }, 100);
         }
 
-        function selectAdminChatUser(uid) {
-            adminChatSelectedUser = uid;
-            adminRoute('messages'); // Re-render
-        }
+        function selectAdminChatUser(uid) { adminChatSelectedUser = uid; updateAdminChatUI(); }
         function sendAdminReply() {
-            const txt = document.getElementById('adm-chat-in').value;
+            const txt = document.getElementById('adm-chat-in').value.trim();
             if(txt && adminChatSelectedUser) {
                 window.fbSendMessage(txt, true, adminChatSelectedUser);
                 document.getElementById('adm-chat-in').value = '';
             }
         }
+        function updateAdminChatUI() { if(!document.getElementById('admin-app').classList.contains('hidden') && document.getElementById('adm-chat-in')) renderAdminMessages(document.getElementById('admin-content-area')); }
 
-        function updateAdminChatUI() {
-            // Eğer admin panel açıksa ve mesajlar sayfasındaysa güncelle
-            if(!document.getElementById('admin-app').classList.contains('hidden') && document.getElementById('adm-chat-in')) {
-                renderAdminMessages(document.getElementById('admin-content-area'));
-            }
-        }
-
-        // Admin Products & Excel (Simplified for this view)
+        // Admin Products
         function renderAdminProducts(area) {
              area.innerHTML = `
-                <div class="flex justify-between items-center mb-6">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
                     <h2 class="text-2xl font-bold">Ürün Yönetimi</h2>
-                    <div class="flex gap-2">
-                        <button onclick="exportExcel()" class="bg-blue-600 px-4 py-2 rounded text-white font-bold hover:bg-blue-700"><i class="fa-solid fa-download mr-2"></i> Excel İndir</button>
-                        <div class="relative overflow-hidden">
-                            <button class="bg-green-600 px-4 py-2 rounded text-white font-bold hover:bg-green-700 cursor-pointer"><i class="fa-solid fa-file-excel mr-2"></i> Excel Yükle</button>
+                    <div class="flex gap-3 w-full md:w-auto">
+                        <button onclick="exportExcel()" class="bg-blue-600 px-4 py-2 rounded text-white font-bold hover:bg-blue-700 flex-1 md:flex-none text-center"><i class="fa-solid fa-download mr-2"></i> İndir</button>
+                        <div class="relative overflow-hidden flex-1 md:flex-none">
+                            <button class="bg-green-600 px-4 py-2 rounded text-white font-bold hover:bg-green-700 w-full text-center"><i class="fa-solid fa-file-excel mr-2"></i> Yükle</button>
                             <input type="file" onchange="importExcel(event)" accept=".xlsx, .xls" class="absolute inset-0 opacity-0 cursor-pointer">
                         </div>
                     </div>
                 </div>
-                <!-- Basit Form -->
-                <div class="bg-gray-800 p-4 rounded mb-4 border border-gray-700">
-                    <div class="grid grid-cols-2 gap-2 mb-2">
-                        <input id="p-name" placeholder="Ürün Adı" class="bg-gray-700 border border-gray-600 p-2 rounded text-white">
-                        <input id="p-price" type="number" placeholder="Fiyat" class="bg-gray-700 border border-gray-600 p-2 rounded text-white">
+                
+                <div class="bg-gray-800 p-6 rounded-xl mb-8 border border-gray-700 shadow-lg">
+                    <h4 class="font-bold mb-4 text-marine-accent">Hızlı Ürün Ekle</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                        <input id="p-name" placeholder="Ürün Adı" class="bg-gray-700 border border-gray-600 p-3 rounded text-white outline-none focus:border-marine-accent md:col-span-2">
+                        <input id="p-price" type="number" placeholder="Fiyat" class="bg-gray-700 border border-gray-600 p-3 rounded text-white outline-none focus:border-marine-accent">
+                        <button onclick="adminAddProduct()" class="bg-marine-accent px-4 py-3 rounded font-bold hover:bg-orange-600 transition">Ekle</button>
                     </div>
-                    <button onclick="adminAddProduct()" class="bg-marine-accent px-4 py-2 rounded">Hızlı Ekle</button>
                 </div>
-                <div class="bg-gray-800 rounded overflow-hidden">
+
+                <div class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700 shadow-lg overflow-x-auto">
                      <table class="w-full text-left text-gray-300 text-sm">
-                        <thead class="bg-gray-700 uppercase font-bold text-xs text-gray-400"><tr><th class="p-4">Ad</th><th class="p-4">Fiyat</th><th class="p-4 text-right">İşlem</th></tr></thead>
+                        <thead class="bg-gray-700 uppercase font-bold text-xs text-gray-400"><tr><th class="p-4">Ad</th><th class="p-4">Fiyat</th><th class="p-4">Kategori</th><th class="p-4 text-right">İşlem</th></tr></thead>
                         <tbody>
                             ${getProducts().map(p => `
-                                <tr class="border-b border-gray-700 hover:bg-gray-700/50">
-                                    <td class="p-4">${p.name}</td>
-                                    <td class="p-4">${p.basePrice} ${p.currency}</td>
-                                    <td class="p-4 text-right"><button onclick="window.fbDeleteProduct('${p.id}')" class="text-red-400"><i class="fa-solid fa-trash"></i></button></td>
+                                <tr class="border-b border-gray-700 hover:bg-gray-700/50 transition">
+                                    <td class="p-4 font-bold text-white">${p.name} ${p.isFeatured ? '<i class="fa-solid fa-star text-yellow-400 ml-1 text-xs"></i>' : ''}</td>
+                                    <td class="p-4 font-mono text-marine-accent">${p.basePrice} ${p.currency}</td>
+                                    <td class="p-4"><span class="bg-gray-700 px-2 py-1 rounded text-xs">${p.category}</span></td>
+                                    <td class="p-4 text-right"><button onclick="window.fbDeleteProduct('${p.id}')" class="text-red-400 hover:text-red-300 bg-red-900/20 p-2 rounded hover:bg-red-900/40 transition"><i class="fa-solid fa-trash"></i></button></td>
                                 </tr>`).join('')}
                         </tbody>
                     </table>
@@ -762,7 +929,6 @@
             }
         }
         
-        // Excel Functions
         function exportExcel() {
             const data = getProducts().map(p => ({ Ad: p.name, Fiyat: p.basePrice, Stok: p.stock }));
             const ws = XLSX.utils.json_to_sheet(data);
@@ -790,7 +956,6 @@
             };
             reader.readAsArrayBuffer(file);
         }
-
     </script>
 </body>
 </html>
